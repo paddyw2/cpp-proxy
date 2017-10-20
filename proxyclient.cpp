@@ -52,7 +52,7 @@ int proxyclient::convert_hostname_ip(char * target_ip, int target_size, char * d
     format_hints.ai_family = AF_INET; 
     format_hints.ai_socktype = SOCK_STREAM;
 
-    error_flag = getaddrinfo(dest_url, "telnet", &format_hints, &ip_info);
+    error_flag = getaddrinfo(dest_url, "http", &format_hints, &ip_info);
     if(error_flag < 0 || ip_info == NULL)
         error("IP conversion failed\n");
 
