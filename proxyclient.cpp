@@ -4,11 +4,13 @@ proxyclient::proxyclient()
 {
     // basic telnet GET info
     const char * request = "GET / HTTP/1.0\r\nConnection: close\r\n\r\n";
-    char dest_url[] = "rainmaker.wunderground.com";
+    char dest_url[] = "linux.cpsc.ucalgary.ca";
+    //char dest_url[] = "rainmaker.wunderground.com";
     dest_port = 23;
 
     char target_ip[32];
     convert_hostname_ip(target_ip, sizeof(target_ip), dest_url);
+    cout << target_ip << endl;
 
     // set port and IP
     dest_addr.sin_family = AF_INET;
@@ -41,30 +43,34 @@ proxyclient::proxyclient()
  */
 int proxyclient::convert_hostname_ip(char * target_ip, int target_size, char * dest_url)
 {
-    // resulting ip information
+    // list of structs returned
+    // by the getaddrinfo
     struct addrinfo * ip_info;
-    // struct containing ip information
-    struct addrinfo format_hints;
-    struct sockaddr_in * temp_ip;
+
+    // clear the target_ip string
     bzero(target_ip, target_size);
 
-    bzero(&format_hints, sizeof(format_hints));
-    format_hints.ai_family = AF_INET; 
-    format_hints.ai_socktype = SOCK_STREAM;
+    // resolve hostname
+    // NULL means no port initialized
+    error_flag = getaddrinfo(dest_url, NULL, NULL, &ip_info);
 
-    error_flag = getaddrinfo(dest_url, "http", &format_hints, &ip_info);
+    // check for errors
     if(error_flag < 0 || ip_info == NULL)
         error("IP conversion failed\n");
 
-    // loop through all the results and connect to the first we can
+    // loop through all the ip_info structs
+    // and get the IP of the first one
     for(struct addrinfo * p = ip_info; p != NULL; p = p->ai_next) 
     {
-        temp_ip = (struct sockaddr_in *) p->ai_addr;
-        strncpy(target_ip, inet_ntoa( temp_ip->sin_addr ), target_size);
+        // copy the socket IP address, converted to
+        // readable format, to the target_ip string
+        strncpy(target_ip, inet_ntoa(((struct sockaddr_in *)p->ai_addr)->sin_addr ), target_size);
+
+        // check that a valid address was extracted
+        // if so, break as we have an IP
         if(strlen(target_ip) > 0)
             break;
     }
-
     return 0;
 }
 
