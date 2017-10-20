@@ -13,9 +13,7 @@
 #include <string>
 #include <iostream>
 
-#define SITE_URL    "http://neverssl.com/"
 #define BUFFERSIZE  512
-#define PORT        80
 
 using namespace std;
 
@@ -26,8 +24,10 @@ class proxyclient
         void error(const char * msg);
         int read_from_client(char * message, int length);
         int write_to_client(char * message, int length);
+        int convert_hostname_ip(char * target_ip, int target_size, char * dest_url);
 
     private:
+        struct sockaddr_in dest_addr;
         int proxy_socket;
         int dest_port;
         int error_flag;
