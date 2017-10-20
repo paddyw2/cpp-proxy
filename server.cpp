@@ -13,8 +13,7 @@ server::server(int argc, char * argv[])
     if (sockfd < 0) 
        error("ERROR opening socket");
 
-    // convert argument to port number
-    // and check for errors
+    // convert argument to port number // and check for errors
     portno = atoi(argv[1]);
     if(portno < 0)
        error("ERROR invalid port number");
@@ -89,8 +88,7 @@ int server::start_server()
                     // notify server of successful message transfer
                     // and process the client request
                     cout << "Received client input: " << buffer << endl;
-
-                    FD_CLR(i, &active_fd_set);
+                    proxyclient proxy;
                 }
             } else {
                 // if no sockets ready to read, do nothing
@@ -101,7 +99,8 @@ int server::start_server()
 
     // close client socket and loop
     // back to accept new connection
-    close(clientsockfd);
+    //close(clientsockfd);
+    //FD_CLR(i, &active_fd_set);
     return 0;
 }
 
@@ -153,7 +152,8 @@ int server::strip_newline(char * input, int max)
  * Error handler
  */
 void server::error(const char *msg) {
-    perror(msg); exit(1);
+    perror(msg);
+    exit(EXIT_FAILURE);
 }
 
 /*

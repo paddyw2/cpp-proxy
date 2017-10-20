@@ -10,9 +10,9 @@
 #include <string>
 #include <iostream>
 
-#define SITE_URL    "http://neverssl.com/"
+#include "proxyclient.h"
+
 #define BUFFERSIZE  512
-#define PORT        8080
 
 using namespace std;
 
