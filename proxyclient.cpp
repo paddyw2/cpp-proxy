@@ -63,10 +63,10 @@ int proxyclient::receive_message(char * message, int length)
 {
     //char http_response[2048];
     bzero(message, length);
-    read_from_client(message, length);
+    int response_size = read_from_client(message, length);
     log(message);
     cout << message << endl;
-    return 0;
+    return response_size;
 }
 
 
@@ -137,7 +137,7 @@ int proxyclient::read_from_client(char * message, int length)
         error("ERROR reading from socket");
     cout << error_flag << endl;
     //message[error_flag] = 0;
-    return 0;
+    return error_flag;
 }
 
 int proxyclient::log(char * message)
@@ -153,29 +153,36 @@ int proxyclient::check_response_ready()
     timeout.tv_usec = 0;
     fd_set active_fd_set;
     fd_set read_fd_set;
+    fd_set write_fd_set;
 
     FD_ZERO (&active_fd_set);
     FD_SET (proxy_socket, &active_fd_set);
 
-    cout << "Working!!" << endl;
     read_fd_set = active_fd_set;
+    write_fd_set = active_fd_set;
     // timeout happens when receiving an incremental
     // when the destination server is not ready to
     // return, and as we are only checking one socket
     // the select() function would block with the
     // timeout
-    if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout) < 0)
-        exit(EXIT_FAILURE);
+    if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, &timeout) < 0)
+        error("Check select error\n");
 
-
-    cout << "Working!!!" << endl;
     if(FD_ISSET(proxy_socket, &read_fd_set)) {
         // host is ready to respond, so
         // return 1
-        cout << "Great success!" << endl;
         return 1;
-    }
+    } 
     return 0;
+    
+    //else if(FD_ISSET(proxy_socket, &write_fd_set)) {
+    /*
+    int n = 0;
+    ioctl(proxy_socket, FIONREAD, &n);
+    if(n == 0)
+        return 0;
+    return -1;
+    */
 }
 
 /*

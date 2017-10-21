@@ -67,7 +67,7 @@ int server::start_server()
         read_fd_set = active_fd_set;
         write_fd_set = active_fd_set;
         if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, &timeout) < 0)
-            exit(EXIT_FAILURE);
+            error("Select error\n");
 
         for(int i=0;i<FD_SETSIZE;i++) {
             if(FD_ISSET(i, &read_fd_set)) {
@@ -94,20 +94,27 @@ int server::start_server()
                     // server data
                     bzero(buffer,BUFFERSIZE);
                     int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
+                    if(message_size == 0)
+                        error("Gibbo\n");
                     // notify server of successful message transfer
                     // and process the client request
                     cout << "Received client input: " << buffer << endl;
                     proxyclient proxy = get_proxy(i, client_proxies);
-                    int ready_respond = proxy.send_message(buffer, message_size);
-                    if(ready_respond == 1) {
+                    int gaga = proxy.check_response_ready();
+                    if(gaga == 0) {
+                        int ready_respond = proxy.send_message(buffer, message_size);
+                    } else if (gaga == 1 ) {
                         cout << "Sending!" << endl;
-                        char response[2048];
-                        proxy.receive_message(response, sizeof(response));
-                        write_to_client(response, sizeof(response), i);
-                        proxy.receive_message(response, sizeof(response));
-                        write_to_client(response, sizeof(response), i);
+                        int length = 1;
+                        while(length != 0) {
+                            char response[2048];
+                            length = proxy.receive_message(response, sizeof(response));
+                            cout << "YAYAYA: " << length << endl;
+                            //if(FD_ISSET(i, &write_fd_set)) {
+                            write_to_client(response, length, i);
+                        }
                     } else {
-                        cout << "Looping!" << endl;
+                        error("Giboo 2\n");
                     }
                 }
             }
