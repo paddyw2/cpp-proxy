@@ -1,12 +1,14 @@
 #include "proxyclient.h"
 
-proxyclient::proxyclient()
+proxyclient::proxyclient(int port, char * url)
 {
     // basic telnet GET info
-    const char * request = "GET / HTTP/1.0\r\nConnection: close\r\n\r\n";
-    char dest_url[] = "linux.cpsc.ucalgary.ca";
+    //const char * request = (const char *) message;
+        //"GET / HTTP/1.0\r\nConnection: close\r\n\r\n";
+    char * dest_url = url;
+        //"linux.cpsc.ucalgary.ca";
     //char dest_url[] = "rainmaker.wunderground.com";
-    dest_port = 23;
+    dest_port = port;
 
     char target_ip[32];
     convert_hostname_ip(target_ip, sizeof(target_ip), dest_url);
@@ -27,13 +29,47 @@ proxyclient::proxyclient()
 
     if(error_flag < 0)
         error("Proxy remote connection error\n");
-
-    char http_response[2048];
-    write_to_client((char *)request, sizeof(request));
-    read_from_client((char *)http_response, sizeof(http_response));
-    cout << http_response << endl;
-
 }
+
+int proxyclient::send_message(vector<string> message)
+{
+    vector<string>::iterator itr;
+    int total_size = 0;
+    itr = message.begin();
+    while(itr != message.end()) {
+        string line = *itr;
+        int size = sizeof(line);
+        total_size += size;
+        itr++;
+    }
+
+    char * complete_message = new char[total_size];
+    char * message_ptr = complete_message;
+
+    itr = message.begin();
+    int offset = 0;
+    while(itr != message.end()) {
+        string line = *itr;
+        int size = sizeof(line);
+        message_ptr += offset;
+        memcpy(message_ptr, &line, size);
+        offset += size;
+        itr++;
+    }
+
+    write_to_client(complete_message, total_size);
+    return 0;
+}
+
+int proxyclient::receive_message(char * message, int length)
+{
+    //char http_response[2048];
+    bzero(message, length);
+    read_from_client(message, length);
+    cout << message << endl;
+    return 0;
+}
+
 
 /*
  * Takes a string hostname, such as "www.google.com"
@@ -101,7 +137,7 @@ int proxyclient::read_from_client(char * message, int length)
     if (error_flag < 0)
         error("ERROR reading from socket");
     cout << error_flag << endl;
-    message[error_flag] = 0;
+    //message[error_flag] = 0;
     return 0;
 }
 

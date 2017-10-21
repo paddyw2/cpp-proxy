@@ -6,8 +6,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include <vector>
 #include <string>
+#include <vector>
 #include <iostream>
 
 #include "proxyclient.h"
@@ -31,6 +31,8 @@ class server
         int sockfd;
         int clientsockfd;
         int portno;
+        int destport;
+        char * serverurl;
         struct sockaddr_in serv_addr;
         struct sockaddr_in cli_addr;
         char password[BUFFERSIZE];

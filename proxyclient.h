@@ -20,11 +20,13 @@ using namespace std;
 class proxyclient
 {
     public:
-        proxyclient();
+        proxyclient(int port, char * url);
         void error(const char * msg);
         int read_from_client(char * message, int length);
         int write_to_client(char * message, int length);
         int convert_hostname_ip(char * target_ip, int target_size, char * dest_url);
+        int send_message(vector<string> message);
+        int receive_message(char * message, int length);
 
     private:
         struct sockaddr_in dest_addr;

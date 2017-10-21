@@ -3,8 +3,8 @@
 server::server(int argc, char * argv[])
 {
     // check command line arguments
-    if (argc < 2) {
-        fprintf(stderr,"ERROR, no port provided\n");
+    if (argc < 4) {
+        fprintf(stderr,"ERROR\nUsage: ./proxy [logOptions] [replaceOptions] srcPort server dstPort\n");
         exit(1);
     }
 
@@ -15,7 +15,9 @@ server::server(int argc, char * argv[])
 
     // convert argument to port number // and check for errors
     portno = atoi(argv[1]);
-    if(portno < 0)
+    destport = atoi(argv[3]);
+    serverurl = argv[2];
+    if(portno < 0 || destport < 0)
        error("ERROR invalid port number");
 
     // clear structures and set to chosen values
@@ -32,6 +34,7 @@ server::server(int argc, char * argv[])
     // start listening for connections on the
     // created socket
     listen(sockfd,5);
+
 }
 
 /*
@@ -41,15 +44,13 @@ server::server(int argc, char * argv[])
  */
 int server::start_server()
 {
-    /* TRIAL AREA */
+    vector<string> socket_output;
     fd_set active_fd_set;
     fd_set read_fd_set;
+    fd_set write_fd_set;
 
     FD_ZERO (&active_fd_set);
     FD_SET (sockfd, &active_fd_set);
-
-
-    /* END */
 
     // define variables
     char buffer[BUFFERSIZE];
@@ -58,9 +59,9 @@ int server::start_server()
 
     // enter infinite server loop
     while(1) {
-
         read_fd_set = active_fd_set;
-        if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL) < 0)
+        write_fd_set = active_fd_set;
+        if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, NULL) < 0)
             exit(EXIT_FAILURE);
 
         for(int i=0;i<FD_SETSIZE;i++) {
@@ -83,13 +84,40 @@ int server::start_server()
                 } else {
                     // one of our existing clients are sending the
                     // server data
-                    bzero(buffer,BUFFERSIZE);
-                    read_from_client(buffer,BUFFERSIZE-1, i);            
-                    // notify server of successful message transfer
-                    // and process the client request
-                    cout << "Received client input: " << buffer << endl;
-                    proxyclient proxy;
+                    socket_output.clear();
+                    // continually get socket output until
+                    // it has nothing more to read
+                    while(FD_ISSET(i, &read_fd_set)) {
+                        bzero(buffer,BUFFERSIZE);
+                        int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
+
+                        string line(buffer, buffer+message_size);
+                        // add to vector
+                        socket_output.push_back(line);
+                        // notify server of successful message transfer
+                        // and process the client request
+                        cout << "Received client input: " << buffer << endl;
+                        // update select before looping
+                        if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, NULL) < 0)
+                            exit(EXIT_FAILURE);
+
+                    }
+
+                    // once socket has been completely read, write
+                    // to destination
+                    if(FD_ISSET(i, &write_fd_set)) {
+                        /* TO DO:
+                         * Implement while loop to to mimic read
+                         */
+                        char response[2048];
+                        proxyclient proxy(destport,serverurl);
+                        proxy.send_message(socket_output);
+                        proxy.receive_message(response, sizeof(response));
+                        write_to_client(response, sizeof(response), i);
+                    }
+
                 }
+
             } else {
                 // if no sockets ready to read, do nothing
             }
@@ -126,11 +154,11 @@ int server::read_from_client(char * message, int length, int client)
 {
     int error_flag;
     error_flag = read(client, message, length); 
-    strip_newline(message, length);
+    strip_newline((char *)message, length);
     // error check
     if (error_flag < 0)
         error("ERROR reading from socket");
-    return 0;
+    return error_flag;
 }
 
 /*
