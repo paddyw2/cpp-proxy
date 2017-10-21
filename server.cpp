@@ -44,7 +44,6 @@ server::server(int argc, char * argv[])
  */
 int server::start_server()
 {
-    vector<string> socket_output;
     fd_set active_fd_set;
     fd_set read_fd_set;
     fd_set write_fd_set;
@@ -67,7 +66,6 @@ int server::start_server()
         for(int i=0;i<FD_SETSIZE;i++) {
             if(FD_ISSET(i, &read_fd_set)) {
                 if(i == sockfd) {
-                    // our server socket is ready to be read
                     // which means a new client wants to conenct
                     cout << "Getting a client connection" << endl;
                     // accept new client connection
@@ -80,56 +78,31 @@ int server::start_server()
                     char welcome[] = "Welcome to the server, type 'help' for "
                                      "a list of commands\n";
                     write_to_client(welcome, strlen(welcome), clientsockfd);
-                    FD_SET(clientsockfd, &active_fd_set);
+                    FD_SET(clientsockfd, &active_fd_set);                
                 } else {
                     // one of our existing clients are sending the
                     // server data
-                    socket_output.clear();
-                    // continually get socket output until
-                    // it has nothing more to read
-                    while(FD_ISSET(i, &read_fd_set)) {
-                        bzero(buffer,BUFFERSIZE);
-                        int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
-
-                        string line(buffer, buffer+message_size);
-                        // add to vector
-                        socket_output.push_back(line);
-                        // notify server of successful message transfer
-                        // and process the client request
-                        cout << "Received client input: " << buffer << endl;
-                        // update select before looping
-                        if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, NULL) < 0)
-                            exit(EXIT_FAILURE);
-
-                    }
-
-                    // once socket has been completely read, write
-                    // to destination
-                    if(FD_ISSET(i, &write_fd_set)) {
-                        /* TO DO:
-                         * Implement while loop to to mimic read
-                         */
+                    bzero(buffer,BUFFERSIZE);
+                    int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
+                    // notify server of successful message transfer
+                    // and process the client request
+                    cout << "Received client input: " << buffer << endl;
+                    proxyclient proxy(destport,serverurl);
+                    int ready_respond = proxy.send_message(buffer, message_size);
+                    if(ready_respond == 1) {
                         char response[2048];
-                        proxyclient proxy(destport,serverurl);
-                        proxy.send_message(socket_output);
                         proxy.receive_message(response, sizeof(response));
                         write_to_client(response, sizeof(response), i);
+                        proxy.receive_message(response, sizeof(response));
+                        write_to_client(response, sizeof(response), i);
+
                     }
-
                 }
-
-            } else {
-                // if no sockets ready to read, do nothing
             }
         }
     }
-
-
-    // close client socket and loop
-    // back to accept new connection
-    //close(clientsockfd);
-    //FD_CLR(i, &active_fd_set);
     return 0;
+
 }
 
 /*
@@ -173,6 +146,11 @@ int server::strip_newline(char * input, int max)
     if(input[strlen(input)-1] == '\r')
         input[strlen(input)-1] = 0;
 
+    return 0;
+}
+
+int server::replace_tamper(char * message)
+{
     return 0;
 }
 

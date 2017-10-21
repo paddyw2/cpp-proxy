@@ -25,12 +25,15 @@ class proxyclient
         int read_from_client(char * message, int length);
         int write_to_client(char * message, int length);
         int convert_hostname_ip(char * target_ip, int target_size, char * dest_url);
-        int send_message(vector<string> message);
+        int send_message(char * message, int length);
         int receive_message(char * message, int length);
+        int log(char * message);
+        int check_response_ready();
 
     private:
         struct sockaddr_in dest_addr;
         int proxy_socket;
         int dest_port;
         int error_flag;
+        int log_flag;
 };

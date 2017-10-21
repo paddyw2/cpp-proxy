@@ -26,6 +26,7 @@ class server
         int strip_newline(char * input, int max);
         void error(const char * msg);
         int stop_server();
+        int replace_tamper(char * message);
 
     private:
         int sockfd;
