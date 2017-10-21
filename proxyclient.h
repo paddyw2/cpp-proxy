@@ -20,7 +20,8 @@ using namespace std;
 class proxyclient
 {
     public:
-        proxyclient(int port, char * url);
+        proxyclient();
+        proxyclient(int port, char * url, int sock_id);
         void error(const char * msg);
         int read_from_client(char * message, int length);
         int write_to_client(char * message, int length);
@@ -29,6 +30,7 @@ class proxyclient
         int receive_message(char * message, int length);
         int log(char * message);
         int check_response_ready();
+        int get_socket_origin_id();
 
     private:
         struct sockaddr_in dest_addr;
@@ -36,4 +38,5 @@ class proxyclient
         int dest_port;
         int error_flag;
         int log_flag;
+        int socket_origin_id;
 };

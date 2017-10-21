@@ -1,7 +1,14 @@
 #include "proxyclient.h"
 
-proxyclient::proxyclient(int port, char * url)
+proxyclient::proxyclient()
 {
+    error("Must provide port, url and id parameters\n");
+}
+
+proxyclient::proxyclient(int port, char * url, int sock_id)
+{
+    // set origin sock id
+    socket_origin_id = sock_id;
     // log by default
     log_flag = 1;
     // basic telnet GET info
@@ -36,11 +43,19 @@ proxyclient::proxyclient(int port, char * url)
 int proxyclient::send_message(char * message, int length)
 {
     log(message);
-    char newmessage[] = "GET / HTTP/1.1\r\nHost: www.neverssl.com\r\n"; //Connection: close\r\n\r\n";
-    write_to_client(newmessage, strlen(newmessage));
+    char newmessage[] = "GET / HTTP/1.1\r\n";
+    char newmessage3[] = "Host: www.neverssl.com\r\n"; //Connection: close\r\n\r\n";
+    //write_to_client(newmessage, strlen(newmessage));
+    char response[2048];
+    //cout << "RR?: " << check_response_ready() << endl;
+    //receive_message(response, 2048);
     char newmessage2[] = "Connection: close\r\n\r\n";
-    write_to_client(newmessage2, strlen(newmessage2));
-    //write_to_client(message, strlen(newmessage));
+    //write_to_client(newmessage3, strlen(newmessage3));
+
+    //cout << "RR?: " << check_response_ready() << endl;
+    //write_to_client(newmessage2, strlen(newmessage2));
+    //cout << "RR?: " << check_response_ready() << endl;
+    write_to_client(message, length);
     return check_response_ready();
 }
 
@@ -132,29 +147,45 @@ int proxyclient::log(char * message)
 
 int proxyclient::check_response_ready()
 {
+    struct timeval timeout;
+    // set timeout to be 1 second
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
     fd_set active_fd_set;
     fd_set read_fd_set;
 
     FD_ZERO (&active_fd_set);
     FD_SET (proxy_socket, &active_fd_set);
 
+    cout << "Working!!" << endl;
     read_fd_set = active_fd_set;
-    if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL) < 0)
+    // timeout happens when receiving an incremental
+    // when the destination server is not ready to
+    // return, and as we are only checking one socket
+    // the select() function would block with the
+    // timeout
+    if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout) < 0)
         exit(EXIT_FAILURE);
 
 
-    for(int i=0;i<FD_SETSIZE;i++) {
-        if(FD_ISSET(i, &read_fd_set)) {
-            if(i == proxy_socket) {
-                // host is ready to respond, so
-                // return 1
-                return 1;
-            }
-        }
+    cout << "Working!!!" << endl;
+    if(FD_ISSET(proxy_socket, &read_fd_set)) {
+        // host is ready to respond, so
+        // return 1
+        cout << "Great success!" << endl;
+        return 1;
     }
     return 0;
 }
 
+/*
+ * Used for searching for the right
+ * proxy for a certain client
+ */
+int proxyclient::get_socket_origin_id()
+{
+    return socket_origin_id;
+}
 
 /*
  * Error handler

@@ -27,6 +27,7 @@ class server
         void error(const char * msg);
         int stop_server();
         int replace_tamper(char * message);
+        proxyclient get_proxy(int socket_id, vector<proxyclient> proxy_list);
 
     private:
         int sockfd;

@@ -44,6 +44,12 @@ server::server(int argc, char * argv[])
  */
 int server::start_server()
 {
+    vector<proxyclient> client_proxies;
+    struct timeval timeout;
+    // set timeout to be 1 second
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    // set socket structs
     fd_set active_fd_set;
     fd_set read_fd_set;
     fd_set write_fd_set;
@@ -60,7 +66,7 @@ int server::start_server()
     while(1) {
         read_fd_set = active_fd_set;
         write_fd_set = active_fd_set;
-        if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, NULL) < 0)
+        if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, &timeout) < 0)
             exit(EXIT_FAILURE);
 
         for(int i=0;i<FD_SETSIZE;i++) {
@@ -78,7 +84,11 @@ int server::start_server()
                     char welcome[] = "Welcome to the server, type 'help' for "
                                      "a list of commands\n";
                     write_to_client(welcome, strlen(welcome), clientsockfd);
-                    FD_SET(clientsockfd, &active_fd_set);                
+                    FD_SET(clientsockfd, &active_fd_set);
+                    // create a proxy for the client and
+                    // add to list
+                    proxyclient new_proxy(destport, serverurl, clientsockfd);
+                    client_proxies.push_back(new_proxy);
                 } else {
                     // one of our existing clients are sending the
                     // server data
@@ -87,15 +97,17 @@ int server::start_server()
                     // notify server of successful message transfer
                     // and process the client request
                     cout << "Received client input: " << buffer << endl;
-                    proxyclient proxy(destport,serverurl);
+                    proxyclient proxy = get_proxy(i, client_proxies);
                     int ready_respond = proxy.send_message(buffer, message_size);
                     if(ready_respond == 1) {
+                        cout << "Sending!" << endl;
                         char response[2048];
                         proxy.receive_message(response, sizeof(response));
                         write_to_client(response, sizeof(response), i);
                         proxy.receive_message(response, sizeof(response));
                         write_to_client(response, sizeof(response), i);
-
+                    } else {
+                        cout << "Looping!" << endl;
                     }
                 }
             }
@@ -127,7 +139,7 @@ int server::read_from_client(char * message, int length, int client)
 {
     int error_flag;
     error_flag = read(client, message, length); 
-    strip_newline((char *)message, length);
+    //strip_newline((char *)message, length);
     // error check
     if (error_flag < 0)
         error("ERROR reading from socket");
@@ -152,6 +164,21 @@ int server::strip_newline(char * input, int max)
 int server::replace_tamper(char * message)
 {
     return 0;
+}
+
+proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
+{
+    vector<proxyclient>::iterator itr;
+    itr = proxy_list.begin();
+    while(itr != proxy_list.end()) {
+        if(socket_id == (*itr).get_socket_origin_id())
+            return *itr;
+        else
+            itr++;
+    }
+    error("No proxy found for the specified client socket\n");
+    proxyclient null_proxy;
+    return null_proxy;
 }
 
 /*
