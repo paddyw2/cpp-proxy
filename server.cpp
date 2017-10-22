@@ -103,9 +103,7 @@ int server::start_server()
                     // the client is disconnected
                     if(message_size == 0) {
                         // remove client
-                        close(i);
-                        FD_CLR(i, &active_fd_set);
-                        proxyclient prxy = get_proxy(i, client_proxies);
+                        remove_client(i, active_fd_set, client_proxies);
 
                         cout << "Local client closed" << endl;
                     } else {
@@ -129,10 +127,8 @@ int server::start_server()
                             if(length == 0) {
                                 // remote server disconnected, so disconnect
                                 // client
-                                close(i);
                                 FD_CLR(i, &active_fd_set);
-                                proxyclient prxy = get_proxy(i, client_proxies);
-
+                                remove_client(i, active_fd_set, client_proxies);
                                 cout << "Remote client closed" << endl;
                             } else {
                                 write_to_client(response, length, i);
@@ -145,6 +141,27 @@ int server::start_server()
     }
     return 0;
 }
+
+int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient> proxies)
+{
+    close(client_socket);
+    FD_CLR(client_socket, &sockets);
+    proxyclient prxy = get_proxy(client_socket, proxies);
+    int target_id = prxy.get_socket_origin_id();
+
+    vector<proxyclient>::iterator itr;
+    itr = proxies.begin();
+    while(itr != proxies.end()) {
+        if(target_id == (*itr).get_socket_origin_id())
+            proxies.erase(itr);
+        else
+            itr++;
+    }
+
+    return 0;
+}
+
+
 
 /*
  * Writes to client socket and checks

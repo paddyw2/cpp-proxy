@@ -28,6 +28,7 @@ class server
         int stop_server();
         int replace_tamper(char * message);
         proxyclient get_proxy(int socket_id, vector<proxyclient> proxy_list);
+        int remove_client(int client_socket, fd_set sockets, vector<proxyclient> proxies);
 
     private:
         int sockfd;
