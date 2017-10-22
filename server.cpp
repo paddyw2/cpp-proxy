@@ -103,6 +103,7 @@ int server::start_server()
                     // the client is disconnected
                     if(message_size == 0) {
                         // remove client
+                        FD_CLR(i, &active_fd_set);
                         remove_client(i, active_fd_set, client_proxies);
 
                         cout << "Local client closed" << endl;
