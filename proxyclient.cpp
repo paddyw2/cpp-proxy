@@ -43,13 +43,13 @@ proxyclient::proxyclient(int port, char * url, int sock_id)
 int proxyclient::send_message(char * message, int length)
 {
     log(message);
-    char newmessage[] = "GET / HTTP/1.1\r\n";
-    char newmessage3[] = "Host: www.neverssl.com\r\n"; //Connection: close\r\n\r\n";
+    //char newmessage[] = "GET / HTTP/1.1\r\n";
+    //char newmessage3[] = "Host: www.neverssl.com\r\n"; //Connection: close\r\n\r\n";
     //write_to_client(newmessage, strlen(newmessage));
-    char response[2048];
+    //char response[2048];
     //cout << "RR?: " << check_response_ready() << endl;
     //receive_message(response, 2048);
-    char newmessage2[] = "Connection: close\r\n\r\n";
+    //char newmessage2[] = "Connection: close\r\n\r\n";
     //write_to_client(newmessage3, strlen(newmessage3));
 
     //cout << "RR?: " << check_response_ready() << endl;
@@ -115,7 +115,6 @@ int proxyclient::convert_hostname_ip(char * target_ip, int target_size, char * d
  */
 int proxyclient::write_to_client(char * message, int length)
 {
-    cout << "Writing..." << endl;
     error_flag = write(proxy_socket, message, length); 
     // error check
     if (error_flag < 0)
@@ -129,7 +128,6 @@ int proxyclient::write_to_client(char * message, int length)
  */
 int proxyclient::read_from_client(char * message, int length)
 {
-    cout << "Reading..." << endl;
     bzero(message, length);
     error_flag = read(proxy_socket, message, length); 
     // error check

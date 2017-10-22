@@ -34,7 +34,6 @@ server::server(int argc, char * argv[])
     // start listening for connections on the
     // created socket
     listen(sockfd,5);
-
 }
 
 /*
@@ -109,6 +108,7 @@ int server::start_server()
                         cout << "Local client closed" << endl;
                     } else {
                         // if message size is normal, send to proxy
+                        cout << "Error here" <<  i << endl;
                         proxy.send_message(buffer, message_size);
                     }
 
@@ -145,8 +145,8 @@ int server::start_server()
 
 int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient> proxies)
 {
+    cout << "Removed: " << client_socket << endl;
     close(client_socket);
-    FD_CLR(client_socket, &sockets);
     proxyclient prxy = get_proxy(client_socket, proxies);
     int target_id = prxy.get_socket_origin_id();
 
