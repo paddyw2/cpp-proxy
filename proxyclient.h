@@ -31,6 +31,7 @@ class proxyclient
         int log(char * message);
         int check_response_ready();
         int get_socket_origin_id();
+        int destroy();
 
     private:
         struct sockaddr_in dest_addr;

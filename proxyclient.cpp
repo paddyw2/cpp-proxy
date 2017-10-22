@@ -65,7 +65,6 @@ int proxyclient::receive_message(char * message, int length)
     bzero(message, length);
     int response_size = read_from_client(message, length);
     log(message);
-    cout << message << endl;
     return response_size;
 }
 
@@ -133,8 +132,6 @@ int proxyclient::read_from_client(char * message, int length)
     // error check
     if (error_flag < 0)
         error("ERROR reading from socket");
-    cout << error_flag << endl;
-    //message[error_flag] = 0;
     return error_flag;
 }
 
@@ -182,6 +179,13 @@ int proxyclient::get_socket_origin_id()
 {
     return socket_origin_id;
 }
+
+int proxyclient::destroy()
+{
+    close(proxy_socket);
+    return 0;
+}
+    
 
 /*
  * Error handler

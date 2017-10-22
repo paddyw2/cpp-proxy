@@ -63,6 +63,13 @@ int server::start_server()
 
     // enter infinite server loop
     while(1) {
+        // check current proxies for any response
+        int remove_socket = check_proxy_responses(client_proxies, active_fd_set);
+        if(remove_socket != -1) {
+            // remove socket
+            FD_CLR(remove_socket, &active_fd_set);
+            remove_client(remove_socket, active_fd_set, client_proxies);
+        }
         read_fd_set = active_fd_set;
         write_fd_set = active_fd_set;
         if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, &timeout) < 0)
@@ -97,45 +104,18 @@ int server::start_server()
                     proxyclient proxy = get_proxy(i, client_proxies);
                     bzero(buffer,BUFFERSIZE);
                     int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
-                    cout << "Received client input: " << buffer << endl;
+                    cout << "Received client input(no endl): " << buffer;
                     // if our local client message size is 0
                     // the client is disconnected
                     if(message_size == 0) {
                         // remove client
                         FD_CLR(i, &active_fd_set);
                         remove_client(i, active_fd_set, client_proxies);
-
                         cout << "Local client closed" << endl;
                     } else {
                         // if message size is normal, send to proxy
-                        cout << "Error here" <<  i << endl;
                         proxy.send_message(buffer, message_size);
                     }
-
-                    int ready_respond = proxy.check_response_ready();
-
-                    if(ready_respond == 1) {
-                        // if the remote server is ready to send
-                        // back to us, continually get its response
-                        // until it doesn't have anything else to 
-                        // send
-                        cout << "Sending!" << endl;
-                        char response[2048];
-                        int length = 1;
-                        while(length != 0) {
-                            bzero(response, 2048);
-                            length = proxy.receive_message(response, sizeof(response));
-                            if(length == 0) {
-                                // remote server disconnected, so disconnect
-                                // client
-                                FD_CLR(i, &active_fd_set);
-                                remove_client(i, active_fd_set, client_proxies);
-                                cout << "Remote client closed" << endl;
-                            } else {
-                                write_to_client(response, length, i);
-                            }
-                        }
-                    }  
                 }
             }
         }
@@ -143,9 +123,44 @@ int server::start_server()
     return 0;
 }
 
-int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient> proxies)
+int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_set)
 {
-    cout << "Removed: " << client_socket << endl;
+    vector<proxyclient>::iterator itr;
+    itr = proxies.begin();
+    while(itr != proxies.end()) {
+        proxyclient proxy = *itr;
+        // check if a response is ready from server
+        int i = proxy.get_socket_origin_id();
+        int ready_respond = proxy.check_response_ready();
+        if(ready_respond == 1) {
+            // if the remote server is ready to send
+            // back to us, continually get its response
+            // until it doesn't have anything else to 
+            // send
+            cout << "Sending!" << endl;
+            char response[2048];
+            int length = 1;
+            while(length != 0) {
+                bzero(response, 2048);
+                length = proxy.receive_message(response, sizeof(response));
+                if(length == 0) {
+                    // remote server disconnected, so disconnect
+                    // client
+                    cout << "Remote client closure detected" << endl;
+                    return i;
+                } else {
+                    write_to_client(response, length, i);
+                }
+            }
+        }
+        itr++;
+    }
+    return -1;
+}
+
+
+int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient> & proxies)
+{
     close(client_socket);
     proxyclient prxy = get_proxy(client_socket, proxies);
     int target_id = prxy.get_socket_origin_id();
@@ -153,12 +168,16 @@ int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient>
     vector<proxyclient>::iterator itr;
     itr = proxies.begin();
     while(itr != proxies.end()) {
-        if(target_id == (*itr).get_socket_origin_id())
+        prxy = *itr;
+        if(target_id == prxy.get_socket_origin_id()) {
+            prxy.destroy();
             proxies.erase(itr);
-        else
+            return 0;
+        } else {
             itr++;
+        }
     }
-
+    error("Proxy not found\n");
     return 0;
 }
 
