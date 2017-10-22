@@ -104,7 +104,7 @@ int server::start_server()
                     proxyclient proxy = get_proxy(i, client_proxies);
                     bzero(buffer,BUFFERSIZE);
                     int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
-                    cout << "Received client input(no endl): " << buffer;
+                    //cout << "Received client input(no endl): " << buffer;
                     // if our local client message size is 0
                     // the client is disconnected
                     if(message_size == 0) {
@@ -131,26 +131,22 @@ int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_
         proxyclient proxy = *itr;
         // check if a response is ready from server
         int i = proxy.get_socket_origin_id();
-        int ready_respond = proxy.check_response_ready();
-        if(ready_respond == 1) {
-            // if the remote server is ready to send
-            // back to us, continually get its response
-            // until it doesn't have anything else to 
-            // send
-            cout << "Sending!" << endl;
-            char response[2048];
-            int length = 1;
-            while(length != 0) {
-                bzero(response, 2048);
-                length = proxy.receive_message(response, sizeof(response));
-                if(length == 0) {
-                    // remote server disconnected, so disconnect
-                    // client
-                    cout << "Remote client closure detected" << endl;
-                    return i;
-                } else {
-                    write_to_client(response, length, i);
-                }
+        // if the remote server is ready to send
+        // back to us, continually get its response
+        // until it doesn't have anything else to 
+        // send
+        char response[2048];
+        int length = 1;
+        while(proxy.check_response_ready() == 1) {
+            bzero(response, 2048);
+            length = proxy.receive_message(response, sizeof(response));
+            if(length == 0) {
+                // remote server disconnected, so disconnect
+                // client
+                cout << "Remote client closure detected" << endl;
+                return i;
+            } else {
+                write_to_client(response, length, i);
             }
         }
         itr++;

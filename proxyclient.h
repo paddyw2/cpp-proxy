@@ -28,7 +28,8 @@ class proxyclient
         int convert_hostname_ip(char * target_ip, int target_size, char * dest_url);
         int send_message(char * message, int length);
         int receive_message(char * message, int length);
-        int log(char * message);
+        int incoming_log(char * message);
+        int outgoing_log(char * message);
         int check_response_ready();
         int get_socket_origin_id();
         int destroy();

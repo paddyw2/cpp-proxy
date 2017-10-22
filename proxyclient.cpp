@@ -42,7 +42,7 @@ proxyclient::proxyclient(int port, char * url, int sock_id)
 
 int proxyclient::send_message(char * message, int length)
 {
-    log(message);
+    outgoing_log(message);
     //char newmessage[] = "GET / HTTP/1.1\r\n";
     //char newmessage3[] = "Host: www.neverssl.com\r\n"; //Connection: close\r\n\r\n";
     //write_to_client(newmessage, strlen(newmessage));
@@ -64,7 +64,7 @@ int proxyclient::receive_message(char * message, int length)
     //char http_response[2048];
     bzero(message, length);
     int response_size = read_from_client(message, length);
-    log(message);
+    incoming_log(message);
     return response_size;
 }
 
@@ -135,8 +135,17 @@ int proxyclient::read_from_client(char * message, int length)
     return error_flag;
 }
 
-int proxyclient::log(char * message)
+int proxyclient::incoming_log(char * message)
 {
+    if(log_flag == 1)
+        cout << "<---- " << message << endl;
+    return 0;
+}
+
+int proxyclient::outgoing_log(char * message)
+{
+    if(log_flag == 1)
+        cout << "----> " << message << endl;
     return 0;
 }
 
