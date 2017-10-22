@@ -174,15 +174,6 @@ int proxyclient::check_response_ready()
         return 1;
     } 
     return 0;
-    
-    //else if(FD_ISSET(proxy_socket, &write_fd_set)) {
-    /*
-    int n = 0;
-    ioctl(proxy_socket, FIONREAD, &n);
-    if(n == 0)
-        return 0;
-    return -1;
-    */
 }
 
 /*
