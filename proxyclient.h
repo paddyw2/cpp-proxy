@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
-#include <sys/ioctl.h>
+#include <time.h>
 
 #include <vector>
 #include <string>
@@ -26,6 +26,7 @@ class proxyclient
         int read_from_client(char * message, int length);
         int write_to_client(char * message, int length);
         int convert_hostname_ip(char * target_ip, int target_size, char * dest_url);
+        int print_connection_info();
         int send_message(char * message, int length);
         int receive_message(char * message, int length);
         int incoming_log(char * message);

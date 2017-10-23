@@ -65,18 +65,26 @@ int server::start_server()
     while(1) {
         // check current proxies for any response
         int remove_socket = check_proxy_responses(client_proxies, active_fd_set);
+        // check for disconnected remote sockets
         if(remove_socket != -1) {
             // remove socket
             FD_CLR(remove_socket, &active_fd_set);
             remove_client(remove_socket, active_fd_set, client_proxies);
         }
+        // set up file descriptor sets and run select
+        // to look for readable sockets
         read_fd_set = active_fd_set;
         write_fd_set = active_fd_set;
         if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, &timeout) < 0)
             error("Select error\n");
 
+
+        // for each socket, check if it has information to
+        // read
         for(int i=0;i<FD_SETSIZE;i++) {
             if(FD_ISSET(i, &read_fd_set)) {
+                // if a socket has information to read, process
+                // each socket
                 if(i == sockfd) {
                     // which means a new client wants to conenct
                     cout << "Getting a client connection" << endl;

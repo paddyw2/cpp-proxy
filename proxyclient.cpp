@@ -9,19 +9,14 @@ proxyclient::proxyclient(int port, char * url, int sock_id)
 {
     // set origin sock id
     socket_origin_id = sock_id;
-    // log by default
-    log_flag = 1;
-    // basic telnet GET info
-    //const char * request = (const char *) message;
-        //"GET / HTTP/1.0\r\nConnection: close\r\n\r\n";
+    // logging off by default
+    log_flag = 0;
     char * dest_url = url;
-        //"linux.cpsc.ucalgary.ca";
-    //char dest_url[] = "rainmaker.wunderground.com";
     dest_port = port;
 
     char target_ip[32];
     convert_hostname_ip(target_ip, sizeof(target_ip), dest_url);
-    cout << target_ip << endl;
+    print_connection_info();
 
     // set port and IP
     dest_addr.sin_family = AF_INET;
@@ -40,21 +35,23 @@ proxyclient::proxyclient(int port, char * url, int sock_id)
         error("Proxy remote connection error\n");
 }
 
+int proxyclient::print_connection_info()
+{
+    cout << "New connection: ";
+    time_t rawtime;
+    struct tm * timeinfo;
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+    char * result = asctime(timeinfo);
+    result[strlen(result)-1] = 0;
+    cout << result;
+    cout << ", from [source]" << endl;
+    return 0;
+}
+
 int proxyclient::send_message(char * message, int length)
 {
     outgoing_log(message);
-    //char newmessage[] = "GET / HTTP/1.1\r\n";
-    //char newmessage3[] = "Host: www.neverssl.com\r\n"; //Connection: close\r\n\r\n";
-    //write_to_client(newmessage, strlen(newmessage));
-    //char response[2048];
-    //cout << "RR?: " << check_response_ready() << endl;
-    //receive_message(response, 2048);
-    //char newmessage2[] = "Connection: close\r\n\r\n";
-    //write_to_client(newmessage3, strlen(newmessage3));
-
-    //cout << "RR?: " << check_response_ready() << endl;
-    //write_to_client(newmessage2, strlen(newmessage2));
-    //cout << "RR?: " << check_response_ready() << endl;
     write_to_client(message, length);
     return check_response_ready();
 }
