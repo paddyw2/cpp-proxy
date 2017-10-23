@@ -101,7 +101,7 @@ int server::start_server()
                     FD_SET(clientsockfd, &active_fd_set);
                     // create a proxy for the client and
                     // add to list
-                    proxyclient new_proxy(destport, serverurl, clientsockfd);
+                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr);
                     client_proxies.push_back(new_proxy);
                 } else {
                     // one of our existing clients are sending the

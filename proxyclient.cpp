@@ -5,17 +5,29 @@ proxyclient::proxyclient()
     error("Must provide port, url and id parameters\n");
 }
 
-proxyclient::proxyclient(int port, char * url, int sock_id)
+proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr)
 {
-    // set origin sock id
-    socket_origin_id = sock_id;
     // logging off by default
     log_flag = 0;
+
+    // set origin sock id
+    socket_origin_id = sock_id;
+
+    // get client source ip
+    socklen_t clilen = sizeof(cli_addr);
+    char * client_ip = inet_ntoa(cli_addr.sin_addr);
+    cout << client_ip << endl;
+    char client_hostname[128];
+    convert_ip_hostname(client_hostname, sizeof(client_hostname), client_ip);
+
+    // get remote connection info
     char * dest_url = url;
     dest_port = port;
-
+    // get remote connection IP from hostname
     char target_ip[32];
     convert_hostname_ip(target_ip, sizeof(target_ip), dest_url);
+
+    // print connection details
     print_connection_info();
 
     // set port and IP
@@ -102,6 +114,12 @@ int proxyclient::convert_hostname_ip(char * target_ip, int target_size, char * d
         if(strlen(target_ip) > 0)
             break;
     }
+    return 0;
+}
+
+int proxyclient::convert_ip_hostname(char * client_hostname, int hostname_size, char * client_ip)
+{
+    // To do: Get hostname from IP //
     return 0;
 }
 
