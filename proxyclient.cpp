@@ -5,30 +5,22 @@ proxyclient::proxyclient()
     error("Must provide port, url and id parameters\n");
 }
 
-proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr)
+proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr, int logging_option)
 {
     // logging off by default
-    log_flag = 0;
-
-    // set origin sock id
-    socket_origin_id = sock_id;
-
-    // get client source ip
-    socklen_t clilen = sizeof(cli_addr);
-    char * client_ip = inet_ntoa(cli_addr.sin_addr);
-    cout << client_ip << endl;
-    char client_hostname[128];
-    convert_ip_hostname(client_hostname, sizeof(client_hostname), client_ip);
-
+    log_flag = logging_option;
     // get remote connection info
     char * dest_url = url;
     dest_port = port;
+    // set origin sock id
+    socket_origin_id = sock_id;
+
+    // resolve origin hostname
+    resolve_origin_hostname(cli_addr);
+
     // get remote connection IP from hostname
     char target_ip[32];
     convert_hostname_ip(target_ip, sizeof(target_ip), dest_url);
-
-    // print connection details
-    print_connection_info();
 
     // set port and IP
     dest_addr.sin_family = AF_INET;
@@ -57,7 +49,9 @@ int proxyclient::print_connection_info()
     char * result = asctime(timeinfo);
     result[strlen(result)-1] = 0;
     cout << result;
-    cout << ", from [source]" << endl;
+    cout << ", from ";
+    cout << origin_hostname;
+    cout << endl;
     return 0;
 }
 
@@ -117,9 +111,22 @@ int proxyclient::convert_hostname_ip(char * target_ip, int target_size, char * d
     return 0;
 }
 
-int proxyclient::convert_ip_hostname(char * client_hostname, int hostname_size, char * client_ip)
+int proxyclient::resolve_origin_hostname(struct sockaddr_in cli_addr)
 {
-    // To do: Get hostname from IP //
+    // get origin IP address
+    socklen_t clilen = sizeof(cli_addr);
+    strncpy(origin_ip, inet_ntoa(cli_addr.sin_addr), sizeof(origin_ip));
+
+    // attempt to origin hostname
+    // if fails, then set to IP address
+    struct sockaddr *sa = (struct sockaddr *)&cli_addr;
+    socklen_t len;
+    char hbuf[NI_MAXHOST];
+    if (getnameinfo(sa, len, hbuf, sizeof(hbuf), NULL, 0, NI_NAMEREQD)) {
+        strncpy(origin_hostname, origin_ip, sizeof(origin_hostname));
+    } else {
+        strncpy(origin_hostname, hbuf, sizeof(origin_hostname));
+    }
     return 0;
 }
 
@@ -195,6 +202,7 @@ int proxyclient::check_response_ready()
     return 0;
 }
 
+
 /*
  * Used for searching for the right
  * proxy for a certain client
@@ -209,7 +217,6 @@ int proxyclient::destroy()
     close(proxy_socket);
     return 0;
 }
-    
 
 /*
  * Error handler

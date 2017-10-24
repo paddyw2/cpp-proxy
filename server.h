@@ -30,6 +30,8 @@ class server
         proxyclient get_proxy(int socket_id, vector<proxyclient> proxy_list);
         int remove_client(int client_socket, fd_set sockets, vector<proxyclient> & proxies);
         int check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_set);
+        int print_logging_status(int option);
+        int process_replace_logging(int replace_set, int logging_set, char * arguments[]);
 
     private:
         int sockfd;
@@ -40,5 +42,6 @@ class server
         struct sockaddr_in serv_addr;
         struct sockaddr_in cli_addr;
         char password[BUFFERSIZE];
+        int logging_option;
 
 };

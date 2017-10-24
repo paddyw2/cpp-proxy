@@ -13,10 +13,41 @@ server::server(int argc, char * argv[])
     if (sockfd < 0) 
        error("ERROR opening socket");
 
-    // convert argument to port number // and check for errors
-    portno = atoi(argv[1]);
-    destport = atoi(argv[3]);
-    serverurl = argv[2];
+    // determine if logging option, or replace
+    // option are included
+    int arg_offset = 0;
+    int replace_set = 0;
+    int logging_set = 0;
+    if(argc == 5) {
+        // logging option provided
+        arg_offset = 1;
+        logging_set = 1;
+    } else if(argc > 5 && strncmp(argv[1], "-replace", sizeof("-replace")) == 0) {
+        // if replace options are provided and no logging
+        // options
+        arg_offset = 3;
+        replace_set = 1;
+    } else if(argc == 8) {
+        // both logging and replace options
+        // provided
+        arg_offset = 4;
+        replace_set = 1;
+        logging_set = 1;
+    } else if(argc > 8) {
+        error("Too many arguments provided\n"
+              "Usage: ./proxy [logOptions] [replaceOptions] srcPort server dstPort\n");
+    } else {
+        // no replace or logging set, so
+        // stay with defaults
+    }
+
+    process_replace_logging(replace_set, logging_set, argv);
+
+    // convert argument to port number
+    // and check for errors
+    portno = atoi(argv[1+arg_offset]);
+    destport = atoi(argv[3+arg_offset]);
+    serverurl = argv[2+arg_offset];
     if(portno < 0 || destport < 0)
        error("ERROR invalid port number");
 
@@ -101,7 +132,8 @@ int server::start_server()
                     FD_SET(clientsockfd, &active_fd_set);
                     // create a proxy for the client and
                     // add to list
-                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr);
+                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr, logging_option);
+                    new_proxy.print_connection_info();
                     client_proxies.push_back(new_proxy);
                 } else {
                     // one of our existing clients are sending the
@@ -119,7 +151,7 @@ int server::start_server()
                         // remove client
                         FD_CLR(i, &active_fd_set);
                         remove_client(i, active_fd_set, client_proxies);
-                        cout << "Local client closed" << endl;
+                        cout << "Client connection closed" << endl;
                     } else {
                         // if message size is normal, send to proxy
                         proxy.send_message(buffer, message_size);
@@ -151,7 +183,7 @@ int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_
             if(length == 0) {
                 // remote server disconnected, so disconnect
                 // client
-                cout << "Remote client closure detected" << endl;
+                cout << "Remote host closed" << endl;
                 return i;
             } else {
                 write_to_client(response, length, i);
@@ -250,6 +282,24 @@ proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
     proxyclient null_proxy;
     return null_proxy;
 }
+
+int server::process_replace_logging(int replace_set, int logging_set, char * arguments[])
+{
+    // if either are set, set appropriate
+    // variables
+    print_logging_status(0);
+    return 0;
+}
+
+int server::print_logging_status(int option)
+{
+    logging_option = option;
+    if(option == 0) {
+        cout << "Logging turned off" << endl;
+    }
+    return 0;
+}
+
 
 /*
  * Error handler
