@@ -287,6 +287,20 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
 {
     // if either are set, set appropriate
     // variables
+    if(logging_set == 1 && replace_set == 1) {
+        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0)
+            cout << "Raw chosen!" << endl;
+    } else if(logging_set == 1) {
+        cout << "Logging only provided!" << endl;
+        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0)
+            cout << "Raw chosen!" << endl;
+        else if(strncmp(arguments[1], "-strip", sizeof("-strip")) == 0)
+            cout << "Strip chosen!" << endl;
+        else if(strncmp(arguments[1], "-auto", sizeof("-auto")) == 0)
+            cout << "AutoN chosen!" << endl;
+        else
+            error("Invalid logging option: must be -raw, -strip, or -auto[N]\n");
+    }
     print_logging_status(0);
     return 0;
 }
