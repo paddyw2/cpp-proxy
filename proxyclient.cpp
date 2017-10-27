@@ -168,8 +168,12 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
         strncpy(direction, "---->", sizeof("---->"));
 
     if(log_flag == 1) {
-        // raw option
-        cout << direction << message << endl;
+        // raw option, just
+        printf("%s ", direction);
+        for(int i=0;i<size;i++) {
+            printf("%c", message[i]);
+        }
+        printf("\n");
     } else if(log_flag == 2 || log_flag == 3) {
         // either strip or hex chosen
         log_strip_hex(direction, message, size);
