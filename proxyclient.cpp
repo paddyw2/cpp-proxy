@@ -59,6 +59,7 @@ int proxyclient::print_connection_info()
 
 int proxyclient::send_message(char * message, int length)
 {
+    find_replace(message, length);
     print_log(message, 1, length);
     write_to_client(message, length);
     return check_response_ready();
@@ -269,6 +270,11 @@ int proxyclient::log_auton(char * direction, char * message, int size)
         counter++;
     }
     printf("\n");
+    return 0;
+}
+
+int proxyclient::find_replace(char * message, int length)
+{
     return 0;
 }
 
