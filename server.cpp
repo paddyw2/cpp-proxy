@@ -45,11 +45,15 @@ server::server(int argc, char * argv[])
 
     // convert argument to port number
     // and check for errors
-    portno = atoi(argv[1+arg_offset]);
-    destport = atoi(argv[3+arg_offset]);
+    try{
+        portno = stoi(argv[1+arg_offset]);
+        destport = stoi(argv[3+arg_offset]);
+    } catch (const std::exception& ex) {
+        error("Invalid port number\n");
+    }
     serverurl = argv[2+arg_offset];
-    if(portno < 0 || destport < 0)
-       error("ERROR invalid port number");
+    if(portno < 1024 || destport < 0)
+       error("ERROR reserved port number");
 
     // clear structures and set to chosen values
     bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -305,9 +309,27 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
         } else if(strncmp(arguments[1], "-hex", sizeof("-hex")) == 0) {
             cout << "Hex chosen!" << endl;
             logging_option = 3;
-        } else if(strncmp(arguments[1], "-auto", sizeof("-auto")) == 0) {
+        } else if(strncmp(arguments[1], "-auto", 5) == 0) {
             cout << "AutoN chosen!" << endl;
-            logging_option = 4;
+            int end = strlen(arguments[1])-1;
+            char val = arguments[1][end];
+            unsigned int number = 0;
+            unsigned int previous = number;
+            unsigned int base = 1;
+            while(val != 'o') {
+                if(val > 47 && val < 58) {
+                    number += ((val - 48)*base);
+                } else {
+                    error("Auto value must be an integer\n");
+                }
+                if(number < previous)
+                    error("Exceeded max integer size\n");
+                base *= 10;
+                previous = number;
+                end--;
+                val = arguments[1][end];
+            }
+            logging_option = (int)number;
         } else {
             error("Invalid logging option: must be -raw, -strip, or -auto[N]\n");
         }
@@ -333,7 +355,6 @@ int server::print_logging_status(int option)
     }
     return 0;
 }
-
 
 /*
  * Error handler

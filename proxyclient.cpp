@@ -220,9 +220,34 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
             }
             printf("|\n");
         }
-    } else if(log_flag == 4) {
+    } else if(log_flag >= 4) {
         // autoN chosen
-        cout << direction << " not implemented" << endl;
+        cout << direction << " ";
+        int n_val = log_flag;
+        int counter = 0;
+        for(int i=0;i<size;i++) {
+            if(counter == n_val) {
+                printf("\n      ");
+                counter = 0;
+            }
+            char next_char = message[i];
+            if(next_char == '\r') {
+                printf("\\r");
+            } else if(next_char == '\n') {
+                printf("\\n");
+            } else if(next_char == '\t') {
+                printf("\\t");
+            } else if(next_char == '\\') {
+                printf("\\");
+            } else if(next_char > 31 && next_char < 127) {
+                printf("%c", next_char);
+            } else {
+                printf("/%02X", (unsigned char)next_char);
+            }
+
+            counter++;
+        }
+        printf("\n");
     } else {
         // logging not set
         // do nothing
