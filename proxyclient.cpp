@@ -171,87 +171,100 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
         // raw option
         cout << direction << message << endl;
     } else if(log_flag == 2 || log_flag == 3) {
-        // save original for hex
-        char original[size];
-        memcpy(original, message, size);
-        // change all non-ascii letters to .
-        for(int i=0;i<size;i++) {
-            if((int)message[i] < 32 || (int)message[i] > 126)
-                message[i] = '.';
-        }
-        if(log_flag == 2) {
-            // strip option, so just print
-            // stripped string
-            cout << direction << message << endl;
-        } else {
-            // hex option
-            // print chars in line, then hex chars x16
-            // then ascii attempt
-            int total_counter = 0;
-            printf("%s", direction);
-            printf(" %08x  ", total_counter);
-            int counter = 0;
-            for(int i=0;i<size;i++) {
-                if(counter == 16) {
-                    printf(" |");
-                    while(counter != 0) {
-                        printf("%c", message[i-counter]);
-                        counter--;
-                    }
-                    printf("|\n");
-                    printf("      %08x  ", total_counter);
-                }
-                if(counter == 8)
-                    printf(" ");
-                printf("%02X ", (unsigned char)original[i]);
-                counter++;
-                total_counter++;
-            }
-            int remainder = 16 - counter;
-            if(counter <= 8)
-                printf(" ");
-            for(int i=0;i<remainder;i++) {
-                printf("   ");
-            }
-            printf(" |");
-            while(counter != 0) {
-                printf("%c", message[size-counter]);
-                counter--;
-            }
-            printf("|\n");
-        }
+        // either strip or hex chosen
+        log_strip_hex(direction, message, size);
     } else if(log_flag >= 4) {
         // autoN chosen
-        cout << direction << " ";
-        int n_val = log_flag;
-        int counter = 0;
-        for(int i=0;i<size;i++) {
-            if(counter == n_val) {
-                printf("\n      ");
-                counter = 0;
-            }
-            char next_char = message[i];
-            if(next_char == '\r') {
-                printf("\\r");
-            } else if(next_char == '\n') {
-                printf("\\n");
-            } else if(next_char == '\t') {
-                printf("\\t");
-            } else if(next_char == '\\') {
-                printf("\\");
-            } else if(next_char > 31 && next_char < 127) {
-                printf("%c", next_char);
-            } else {
-                printf("/%02X", (unsigned char)next_char);
-            }
-
-            counter++;
-        }
-        printf("\n");
+        log_auton(direction, message, size);
     } else {
         // logging not set
         // do nothing
     }
+    return 0;
+}
+
+int proxyclient::log_strip_hex(char * direction, char * message, int size)
+{
+    // save original for hex
+    char original[size];
+    memcpy(original, message, size);
+    // change all non-ascii letters to .
+    for(int i=0;i<size;i++) {
+        if((int)message[i] < 32 || (int)message[i] > 126)
+            message[i] = '.';
+    }
+    if(log_flag == 2) {
+        // strip option, so just print
+        // stripped string
+        cout << direction << message << endl;
+    } else {
+        // hex option
+        // print chars in line, then hex chars x16
+        // then ascii attempt
+        int total_counter = 0;
+        printf("%s", direction);
+        printf(" %08x  ", total_counter);
+        int counter = 0;
+        for(int i=0;i<size;i++) {
+            if(counter == 16) {
+                printf(" |");
+                while(counter != 0) {
+                    printf("%c", message[i-counter]);
+                    counter--;
+                }
+                printf("|\n");
+                printf("      %08x  ", total_counter);
+            }
+            if(counter == 8)
+                printf(" ");
+            printf("%02X ", (unsigned char)original[i]);
+            counter++;
+            total_counter++;
+        }
+        int remainder = 16 - counter;
+        if(counter <= 8)
+            printf(" ");
+        for(int i=0;i<remainder;i++) {
+            printf("   ");
+        }
+        printf(" |");
+        while(counter != 0) {
+            printf("%c", message[size-counter]);
+            counter--;
+        }
+        printf("|\n");
+    }
+    return 0;
+}
+
+int proxyclient::log_auton(char * direction, char * message, int size)
+{
+    cout << direction << " ";
+    int n_val = log_flag;
+    int counter = 0;
+    for(int i=0;i<size;i++) {
+        if(counter == n_val) {
+            printf("\n      ");
+            counter = 0;
+        }
+        char next_char = message[i];
+        if(next_char == '\r') {
+            printf("\\r");
+        } else if(next_char == '\n') {
+            printf("\\n");
+        } else if(next_char == '\t') {
+            printf("\\t");
+        } else if(next_char == '\\') {
+            printf("\\");
+        } else if(next_char > 31 && next_char < 127) {
+            printf("%c", next_char);
+        } else {
+            printf("/%02X", (unsigned char)next_char);
+        }
+
+        counter++;
+    }
+    printf("\n");
     return 0;
 }
 

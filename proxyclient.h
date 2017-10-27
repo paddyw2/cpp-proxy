@@ -31,6 +31,8 @@ class proxyclient
         int send_message(char * message, int length);
         int receive_message(char * message, int length);
         int print_log(char * message, int direct, int size);
+        int log_strip_hex(char * direction, char * message, int size);
+        int log_auton(char * direction, char * message, int size);
         int check_response_ready();
         int get_socket_origin_id();
         int destroy();
