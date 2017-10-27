@@ -5,10 +5,12 @@ proxyclient::proxyclient()
     error("Must provide port, url and id parameters\n");
 }
 
-proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr, int logging_option)
+proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr, int logging_option, int replace_option)
 {
-    // logging off by default
+    // set logging and replace options
     log_flag = logging_option;
+    replace_flag = replace_option;
+
     // get remote connection info
     char * dest_url = url;
     dest_port = port;
@@ -57,20 +59,18 @@ int proxyclient::print_connection_info()
 
 int proxyclient::send_message(char * message, int length)
 {
-    outgoing_log(message);
+    print_log(message, 1, length);
     write_to_client(message, length);
     return check_response_ready();
 }
 
 int proxyclient::receive_message(char * message, int length)
 {
-    //char http_response[2048];
     bzero(message, length);
     int response_size = read_from_client(message, length);
-    incoming_log(message);
+    print_log(message, 0, response_size);
     return response_size;
 }
-
 
 /*
  * Takes a string hostname, such as "www.google.com"
@@ -157,17 +157,73 @@ int proxyclient::read_from_client(char * message, int length)
     return error_flag;
 }
 
-int proxyclient::incoming_log(char * message)
+int proxyclient::print_log(char * orig_message, int direct, int size)
 {
-    if(log_flag == 1)
-        cout << "<---- " << message << endl;
-    return 0;
-}
+    char message[size];
+    memcpy(message, orig_message, size);
+    char direction[8];
+    if(direct == 0)
+        strncpy(direction, "<----", sizeof("<----"));
+    else
+        strncpy(direction, "---->", sizeof("---->"));
 
-int proxyclient::outgoing_log(char * message)
-{
-    if(log_flag == 1)
-        cout << "----> " << message << endl;
+    if(log_flag == 1) {
+        // raw option
+        cout << direction << message << endl;
+    } else if(log_flag == 2 || log_flag == 3) {
+        // save original for hex
+        char original[size];
+        memcpy(original, message, size);
+        // change all non-ascii letters to .
+        for(int i=0;i<size;i++) {
+            if((int)message[i] < 32 || (int)message[i] > 126)
+                message[i] = '.';
+        }
+        if(log_flag == 2) {
+            // strip option, so just print
+            // stripped string
+            cout << direction << message << endl;
+        } else {
+            // hex option
+            // print chars in line, then hex chars x16
+            // then ascii attempt
+            int total_counter = 0;
+            printf("%s", direction);
+            printf(" %08x  ", total_counter);
+            int counter = 0;
+            for(int i=0;i<size;i++) {
+                if(counter == 16) {
+                    printf(" |");
+                    while(counter != 0) {
+                        printf("%c", message[i-counter]);
+                        counter--;
+                    }
+                    printf("|\n");
+                    printf("      %08x  ", total_counter);
+                }
+                if(counter == 8)
+                    printf(" ");
+                printf("%02X ", (unsigned char)original[i]);
+                counter++;
+                total_counter++;
+            }
+            int remainder = 16 - counter;
+            for(int i=0;i<remainder;i++) {
+                printf("   ");
+            }
+            printf(" |");
+            while(counter != 0) {
+                printf("%c", message[size-counter]);
+                counter--;
+            }
+            printf("|\n");
+        }
+    } else if(log_flag == 4) {
+        // autoN chosen
+    } else {
+        // logging not set
+        // do nothing
+    }
     return 0;
 }
 
@@ -201,7 +257,6 @@ int proxyclient::check_response_ready()
     } 
     return 0;
 }
-
 
 /*
  * Used for searching for the right

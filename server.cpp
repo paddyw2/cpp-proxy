@@ -132,7 +132,7 @@ int server::start_server()
                     FD_SET(clientsockfd, &active_fd_set);
                     // create a proxy for the client and
                     // add to list
-                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr, logging_option);
+                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr, logging_option, replace_option);
                     new_proxy.print_connection_info();
                     client_proxies.push_back(new_proxy);
                 } else {
@@ -288,20 +288,37 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
     // if either are set, set appropriate
     // variables
     if(logging_set == 1 && replace_set == 1) {
-        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0)
+        replace_option = 1;
+        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0) {
             cout << "Raw chosen!" << endl;
-    } else if(logging_set == 1) {
+            logging_option = 1;
+        }
+    } else if(logging_set == 1 && replace_set == 0) {
         cout << "Logging only provided!" << endl;
-        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0)
+        replace_option = 0;
+        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0) {
             cout << "Raw chosen!" << endl;
-        else if(strncmp(arguments[1], "-strip", sizeof("-strip")) == 0)
+            logging_option = 1;
+        } else if(strncmp(arguments[1], "-strip", sizeof("-strip")) == 0) {
             cout << "Strip chosen!" << endl;
-        else if(strncmp(arguments[1], "-auto", sizeof("-auto")) == 0)
+            logging_option = 2;
+        } else if(strncmp(arguments[1], "-auto", sizeof("-auto")) == 0) {
             cout << "AutoN chosen!" << endl;
-        else
+            logging_option = 3;
+        } else {
             error("Invalid logging option: must be -raw, -strip, or -auto[N]\n");
+        }
+    } else if(replace_set == 1) {
+        // just replace chosen
+        cout << "Replace only provide!" << endl;
+        replace_option = 1;
+    } else {
+        // neither logging or replace set
+        cout << "No options set - logging off by default" << endl;
+        logging_option = 0;
+        replace_option = 0;
     }
-    print_logging_status(0);
+    print_logging_status(logging_option);
     return 0;
 }
 

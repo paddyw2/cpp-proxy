@@ -43,5 +43,6 @@ class server
         struct sockaddr_in cli_addr;
         char password[BUFFERSIZE];
         int logging_option;
+        int replace_option;
 
 };
