@@ -208,6 +208,8 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
                 total_counter++;
             }
             int remainder = 16 - counter;
+            if(counter <= 8)
+                printf(" ");
             for(int i=0;i<remainder;i++) {
                 printf("   ");
             }
@@ -220,6 +222,7 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
         }
     } else if(log_flag == 4) {
         // autoN chosen
+        cout << direction << " not implemented" << endl;
     } else {
         // logging not set
         // do nothing

@@ -302,9 +302,12 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
         } else if(strncmp(arguments[1], "-strip", sizeof("-strip")) == 0) {
             cout << "Strip chosen!" << endl;
             logging_option = 2;
+        } else if(strncmp(arguments[1], "-hex", sizeof("-hex")) == 0) {
+            cout << "Hex chosen!" << endl;
+            logging_option = 3;
         } else if(strncmp(arguments[1], "-auto", sizeof("-auto")) == 0) {
             cout << "AutoN chosen!" << endl;
-            logging_option = 3;
+            logging_option = 4;
         } else {
             error("Invalid logging option: must be -raw, -strip, or -auto[N]\n");
         }
