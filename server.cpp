@@ -182,11 +182,12 @@ int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_
         // back to us, continually get its response
         // until it doesn't have anything else to 
         // send
-        char response[2048];
+        int response_base = 2048;
+        char * response = (char *)malloc(response_base);;
         int length = 1;
         while(proxy.check_response_ready() == 1) {
             bzero(response, 2048);
-            length = proxy.receive_message(response, sizeof(response));
+            length = proxy.receive_message(&response, response_base);
             if(length == 0) {
                 // remote server disconnected, so disconnect
                 // client

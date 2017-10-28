@@ -59,7 +59,6 @@ int proxyclient::set_replace_strings(char * replace_old, char * replace_new)
     return 0;
 }
 
-
 int proxyclient::print_connection_info()
 {
     cout << "New connection: ";
@@ -86,12 +85,16 @@ int proxyclient::send_message(char * orig_message, int length)
     return check_response_ready();
 }
 
-int proxyclient::receive_message(char * message, int length)
+int proxyclient::receive_message(char ** message, int length)
 {
-    bzero(message, length);
-    int response_size = read_from_client(message, length);
-    print_log(message, 0, response_size);
-    return response_size;
+    bzero(*message, length);
+    int response_size = read_from_client(*message, length);
+    char * new_message = (char *)malloc(response_size);
+    memcpy(new_message, *message, response_size);
+    int new_size = find_replace(&new_message, response_size);
+    print_log(new_message, 0, new_size);
+    *message = new_message;
+    return new_size;
 }
 
 /*

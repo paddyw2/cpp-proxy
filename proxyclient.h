@@ -31,7 +31,7 @@ class proxyclient
         int resolve_origin_hostname(struct sockaddr_in cli_addr);
         int print_connection_info();
         int send_message(char * orig_message, int length);
-        int receive_message(char * message, int length);
+        int receive_message(char ** message, int length);
         int print_log(char * message, int direct, int size);
         int log_strip_hex(char * direction, char * message, int size);
         int log_auton(char * direction, char * message, int size);
