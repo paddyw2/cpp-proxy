@@ -46,11 +46,12 @@ server::server(int argc, char * argv[])
     // convert argument to port number
     // and check for errors
     try{
-        portno = stoi(argv[1+arg_offset]);
+        portno = stoi(argv[1+logging_set]);
         destport = stoi(argv[3+arg_offset]);
     } catch (const std::exception& ex) {
         error("Invalid port number\n");
     }
+    cout << portno << endl;
     serverurl = argv[2+arg_offset];
     if(portno < 1024 || destport < 0)
        error("ERROR reserved port number");
@@ -112,7 +113,6 @@ int server::start_server()
         write_fd_set = active_fd_set;
         if(select(FD_SETSIZE, &read_fd_set, &write_fd_set, NULL, &timeout) < 0)
             error("Select error\n");
-
 
         // for each socket, check if it has information to
         // read
@@ -352,6 +352,8 @@ int server::print_logging_status(int option)
     logging_option = option;
     if(option == 0) {
         cout << "Logging turned off" << endl;
+    } else {
+        cout << "Logging on" << endl;
     }
     return 0;
 }

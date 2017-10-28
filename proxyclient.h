@@ -28,12 +28,12 @@ class proxyclient
         int convert_hostname_ip(char * target_ip, int target_size, char * dest_url);
         int resolve_origin_hostname(struct sockaddr_in cli_addr);
         int print_connection_info();
-        int send_message(char * message, int length);
+        int send_message(char * orig_message, int length);
         int receive_message(char * message, int length);
         int print_log(char * message, int direct, int size);
         int log_strip_hex(char * direction, char * message, int size);
         int log_auton(char * direction, char * message, int size);
-        int find_replace(char * message, int length);
+        int find_replace(char ** message, int length);
         int check_response_ready();
         int get_socket_origin_id();
         int destroy();

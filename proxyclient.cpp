@@ -57,11 +57,15 @@ int proxyclient::print_connection_info()
     return 0;
 }
 
-int proxyclient::send_message(char * message, int length)
+int proxyclient::send_message(char * orig_message, int length)
 {
-    find_replace(message, length);
-    print_log(message, 1, length);
-    write_to_client(message, length);
+    char * message = (char *)malloc(length);
+    memcpy(message, orig_message, length);
+
+    int new_size = find_replace(&message, length);
+    cout << message << endl;
+    print_log(message, 1, new_size);
+    write_to_client(message, new_size);
     return check_response_ready();
 }
 
@@ -273,15 +277,24 @@ int proxyclient::log_auton(char * direction, char * message, int size)
     return 0;
 }
 
-int proxyclient::find_replace(char * message, int length)
+int proxyclient::find_replace(char ** message, int length)
 {
-    char replace_str_old[] = "FA";
-    char replace_str_new[] = "HTTP";
+    char * new_message = (char *)malloc(length);
+    memcpy(new_message, *message, length);
+    int current_size = length;
+    int max_size = length;
+    int inserted_size = 0;
+
+    char replace_str_old[] = "test";
+    char replace_str_new[] = "www.neverssl.com";
+    int length_diff = strlen(replace_str_new) - strlen(replace_str_old);
+    cout << "len: " << length_diff << endl;
     int master_found = 0;
+
     for(int i=0; i<length; i++) {
         int found = 1;
         for(int j=0; j<strlen(replace_str_old); j++) {
-            if(message[i+j] == replace_str_old[j]) {
+            if(new_message[i+j] == replace_str_old[j]) {
                 continue;
             } else {
                 found = 0;
@@ -292,16 +305,43 @@ int proxyclient::find_replace(char * message, int length)
         if(found == 1) {
             // replace with new string
             master_found = 1;
+            if(length_diff == 0) {
+                // simple replace
+            } else {
+                // replace is larger than original
+                if(current_size + strlen(replace_str_new) >= max_size) {
+                    // increase new_message size, ifsource is maxed out
+                    new_message = (char *)realloc(new_message, max_size*2);
+                    // increment size of allocation
+                    max_size = max_size*2;
+                    cout << "Realloc" << endl;
+                }
+                // bump everything after original up by difference
+                char * tmp = (char *)malloc(current_size);
+                memcpy(tmp, new_message, current_size);
+                memcpy(new_message+i+length_diff, tmp+i, current_size-i);
+                free(tmp);
+                // now copy replacement string into place
+                memcpy(new_message+i, replace_str_new, strlen(replace_str_new));
+                // increment current size
+                current_size += length_diff;
+            }
         } else {
             // string not found at this
-            // index
+            // index, so do nothing
         }
     }
+    *message = (char *)realloc(*message, current_size);
+    memcpy(*message, new_message, current_size);
 
-    if(master_found == 1)
+    if(master_found == 1) {
         cout << "At least one occurance found" << endl;
+        cout << length << " " << current_size << endl;
+        cout << *message << endl;
+        cout << message << endl;
+    }
 
-    return 0;
+    return current_size;
 }
 
 int proxyclient::check_response_ready()
