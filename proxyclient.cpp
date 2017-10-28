@@ -5,15 +5,16 @@ proxyclient::proxyclient()
     error("Must provide port, url and id parameters\n");
 }
 
-proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr, int logging_option, int replace_option)
+proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr)
 {
-    // set logging and replace options
-    log_flag = logging_option;
-    replace_flag = replace_option;
-
+    // set default options
+    log_flag = 0;
+    replace_flag = 0;
+    replace_not_set = 1;
     // get remote connection info
     char * dest_url = url;
     dest_port = port;
+
     // set origin sock id
     socket_origin_id = sock_id;
 
@@ -41,6 +42,24 @@ proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in c
         error("Proxy remote connection error\n");
 }
 
+int proxyclient::set_log_replace(int logging_option, int replace_option)
+{
+    // set logging and replace options
+    log_flag = logging_option;
+    replace_flag = replace_option;
+    return 0;
+}
+
+int proxyclient::set_replace_strings(char * replace_old, char * replace_new)
+{
+    // copy replace strings
+    memcpy(replace_str_old, replace_old, sizeof(replace_str_old));
+    memcpy(replace_str_new, replace_new, sizeof(replace_str_new));
+    replace_not_set = 0;
+    return 0;
+}
+
+
 int proxyclient::print_connection_info()
 {
     cout << "New connection: ";
@@ -62,6 +81,8 @@ int proxyclient::send_message(char * orig_message, int length)
     char * message = (char *)malloc(length);
     memcpy(message, orig_message, length);
 
+    cout << replace_str_old << endl;
+    cout << replace_str_new << endl;
     int new_size = find_replace(&message, length);
     print_log(message, 1, new_size);
     write_to_client(message, new_size);
@@ -278,14 +299,20 @@ int proxyclient::log_auton(char * direction, char * message, int size)
 
 int proxyclient::find_replace(char ** message, int length)
 {
+    // check if replace activated
+    if(replace_flag == 0)
+        return 0;
+    // check that replacement params provided
+    if(replace_not_set == 1)
+        error("Replace specified but strings not provided\n");
+
+    // if activate, proceed with replace
     char * new_message = (char *)malloc(length);
     memcpy(new_message, *message, length);
     int current_size = length;
     int max_size = length;
     int inserted_size = 0;
 
-    char replace_str_old[] = "comyeah";
-    char replace_str_new[] = "com";
     int length_diff = strlen(replace_str_new) - strlen(replace_str_old);
     cout << "len: " << length_diff << endl;
     int master_found = 0;

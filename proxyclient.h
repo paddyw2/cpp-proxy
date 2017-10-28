@@ -21,7 +21,9 @@ class proxyclient
 {
     public:
         proxyclient();
-        proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr, int logging_option, int replace_option);
+        proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr);
+        int set_log_replace(int logging_option, int replace_option);
+        int set_replace_strings(char * replace_old, char * replace_new);
         void error(const char * msg);
         int read_from_client(char * message, int length);
         int write_to_client(char * message, int length);
@@ -50,6 +52,7 @@ class proxyclient
         char origin_ip[64];
         char replace_str_old[128];
         char replace_str_new[128];
+        int replace_not_set;
 
 
 };

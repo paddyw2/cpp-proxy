@@ -45,7 +45,7 @@ server::server(int argc, char * argv[])
 
     // convert argument to port number
     // and check for errors
-    try{
+    try {
         portno = stoi(argv[1+logging_set]);
         destport = stoi(argv[3+arg_offset]);
     } catch (const std::exception& ex) {
@@ -135,8 +135,12 @@ int server::start_server()
                     FD_SET(clientsockfd, &active_fd_set);
                     // create a proxy for the client and
                     // add to list
-                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr, logging_option, replace_option);
+                    proxyclient new_proxy(destport, serverurl, clientsockfd, cli_addr);
+                    // set values
+                    new_proxy.set_log_replace(logging_option, replace_option);
+                    new_proxy.set_replace_strings(replace_str_old, replace_str_new);
                     new_proxy.print_connection_info();
+                    // add to list
                     client_proxies.push_back(new_proxy);
                 } else {
                     // one of our existing clients are sending the
@@ -287,21 +291,18 @@ proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
 
 int server::process_replace_logging(int replace_set, int logging_set, char * arguments[])
 {
+    // process replace
     if(replace_set == 1) {
         memcpy(replace_str_old, arguments[3+logging_set], sizeof(replace_str_old));
         memcpy(replace_str_new, arguments[4+logging_set], sizeof(replace_str_new));
         replace_option = 1;
+    } else {
+        cout << "No replace options provided" << endl;
+        replace_option = 0;
     }
-    // if either are set, set appropriate
-    // variables
-    if(logging_set == 1 && replace_set == 1) {
-        replace_option = 1;
-        if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0) {
-            cout << "Raw chosen!" << endl;
-            logging_option = 1;
-        }
-    } else if(logging_set == 1 && replace_set == 0) {
-        cout << "Logging only provided!" << endl;
+    // process logging
+    if(logging_set == 1) {
+        cout << "Logging provided!" << endl;
         replace_option = 0;
         if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0) {
             cout << "Raw chosen!" << endl;
@@ -336,28 +337,12 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
         } else {
             error("Invalid logging option: must be -raw, -strip, or -auto[N]\n");
         }
-    } else if(replace_set == 1) {
-        // just replace chosen
-        cout << "Replace only provide!" << endl;
-        replace_option = 1;
     } else {
         // neither logging or replace set
-        cout << "No options set - logging off by default" << endl;
+        cout << "No logging options set - logging off by default" << endl;
         logging_option = 0;
-        replace_option = 0;
     }
-    print_logging_status(logging_option);
-    return 0;
-}
-
-int server::print_logging_status(int option)
-{
-    logging_option = option;
-    if(option == 0) {
-        cout << "Logging turned off" << endl;
-    } else {
-        cout << "Logging on" << endl;
-    }
+    //print_logging_status(logging_option);
     return 0;
 }
 
