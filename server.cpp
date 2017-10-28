@@ -51,7 +51,6 @@ server::server(int argc, char * argv[])
     } catch (const std::exception& ex) {
         error("Invalid port number\n");
     }
-    cout << portno << endl;
     serverurl = argv[2+arg_offset];
     if(portno < 1024 || destport < 0)
        error("ERROR reserved port number");
@@ -148,7 +147,6 @@ int server::start_server()
                     proxyclient proxy = get_proxy(i, client_proxies);
                     bzero(buffer,BUFFERSIZE);
                     int message_size = read_from_client(buffer,BUFFERSIZE-1, i);
-                    //cout << "Received client input(no endl): " << buffer;
                     // if our local client message size is 0
                     // the client is disconnected
                     if(message_size == 0) {
@@ -289,6 +287,11 @@ proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
 
 int server::process_replace_logging(int replace_set, int logging_set, char * arguments[])
 {
+    if(replace_set == 1) {
+        memcpy(replace_str_old, arguments[3+logging_set], sizeof(replace_str_old));
+        memcpy(replace_str_new, arguments[4+logging_set], sizeof(replace_str_new));
+        replace_option = 1;
+    }
     // if either are set, set appropriate
     // variables
     if(logging_set == 1 && replace_set == 1) {

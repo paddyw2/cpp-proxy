@@ -48,5 +48,8 @@ class proxyclient
         int socket_origin_id;
         char origin_hostname[128];
         char origin_ip[64];
+        char replace_str_old[128];
+        char replace_str_new[128];
+
 
 };

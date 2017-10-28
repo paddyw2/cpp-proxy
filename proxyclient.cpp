@@ -63,7 +63,6 @@ int proxyclient::send_message(char * orig_message, int length)
     memcpy(message, orig_message, length);
 
     int new_size = find_replace(&message, length);
-    cout << message << endl;
     print_log(message, 1, new_size);
     write_to_client(message, new_size);
     return check_response_ready();
@@ -285,8 +284,8 @@ int proxyclient::find_replace(char ** message, int length)
     int max_size = length;
     int inserted_size = 0;
 
-    char replace_str_old[] = "test";
-    char replace_str_new[] = "www.neverssl.com";
+    char replace_str_old[] = "comyeah";
+    char replace_str_new[] = "com";
     int length_diff = strlen(replace_str_new) - strlen(replace_str_old);
     cout << "len: " << length_diff << endl;
     int master_found = 0;
@@ -305,40 +304,41 @@ int proxyclient::find_replace(char ** message, int length)
         if(found == 1) {
             // replace with new string
             master_found = 1;
-            if(length_diff == 0) {
-                // simple replace
-            } else {
-                // replace is larger than original
-                if(current_size + strlen(replace_str_new) >= max_size) {
-                    // increase new_message size, ifsource is maxed out
-                    new_message = (char *)realloc(new_message, max_size*2);
-                    // increment size of allocation
-                    max_size = max_size*2;
-                    cout << "Realloc" << endl;
-                }
-                // bump everything after original up by difference
-                char * tmp = (char *)malloc(current_size);
-                memcpy(tmp, new_message, current_size);
-                memcpy(new_message+i+length_diff, tmp+i, current_size-i);
-                free(tmp);
-                // now copy replacement string into place
-                memcpy(new_message+i, replace_str_new, strlen(replace_str_new));
-                // increment current size
-                current_size += length_diff;
+            // replace is larger than original
+            if(current_size + strlen(replace_str_new) >= max_size) {
+                // increase new_message size, ifsource is maxed out
+                new_message = (char *)realloc(new_message, max_size*2);
+                // increment size of allocation
+                max_size = max_size*2;
+                cout << "Realloc" << endl;
             }
+            // bump everything after original up by difference
+            char * tmp = (char *)calloc(current_size, sizeof(char));
+            memcpy(tmp, new_message, current_size);
+            /*if(length_diff > 0)
+                memcpy(new_message+i+length_diff, tmp+i, current_size-i);
+            else */
+                memcpy(new_message+i+strlen(replace_str_old)+length_diff,
+                       tmp+i+strlen(replace_str_old), current_size-i-strlen(replace_str_old)
+                       );
+            free(tmp);
+            // now copy replacement string into place
+            memcpy(new_message+i, replace_str_new, strlen(replace_str_new));
+            // increment current size
+            current_size += length_diff;
         } else {
             // string not found at this
             // index, so do nothing
         }
     }
-    *message = (char *)realloc(*message, current_size);
-    memcpy(*message, new_message, current_size);
 
     if(master_found == 1) {
         cout << "At least one occurance found" << endl;
-        cout << length << " " << current_size << endl;
+        // update message with new pointer after realloc
+        *message = (char *)realloc(*message, current_size);
+        memcpy(*message, new_message, current_size);
+        cout << "Message" << endl;
         cout << *message << endl;
-        cout << message << endl;
     }
 
     return current_size;
