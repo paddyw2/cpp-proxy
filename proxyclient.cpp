@@ -339,12 +339,8 @@ int proxyclient::find_replace(char ** message, int length)
             // bump everything after original up by difference
             char * tmp = (char *)calloc(current_size, sizeof(char));
             memcpy(tmp, new_message, current_size);
-            /*if(length_diff > 0)
-                memcpy(new_message+i+length_diff, tmp+i, current_size-i);
-            else */
-                memcpy(new_message+i+strlen(replace_str_old)+length_diff,
-                       tmp+i+strlen(replace_str_old), current_size-i-strlen(replace_str_old)
-                       );
+            memcpy(new_message+i+strlen(replace_str_old)+length_diff,
+                   tmp+i+strlen(replace_str_old), current_size-i-strlen(replace_str_old));
             free(tmp);
             // now copy replacement string into place
             memcpy(new_message+i, replace_str_new, strlen(replace_str_new));

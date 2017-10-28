@@ -22,7 +22,7 @@ server::server(int argc, char * argv[])
         // logging option provided
         arg_offset = 1;
         logging_set = 1;
-    } else if(argc > 5 && strncmp(argv[1], "-replace", sizeof("-replace")) == 0) {
+    } else if(argc > 5 && strncmp(argv[2], "-replace", sizeof("-replace")) == 0) {
         // if replace options are provided and no logging
         // options
         arg_offset = 3;
@@ -49,7 +49,8 @@ server::server(int argc, char * argv[])
         portno = stoi(argv[1+logging_set]);
         destport = stoi(argv[3+arg_offset]);
     } catch (const std::exception& ex) {
-        error("Invalid port number\n");
+        error("Invalid port number\n"
+              "Usage: ./proxy [logOptions] [replaceOptions] srcPort server dstPort\n");
     }
     serverurl = argv[2+arg_offset];
     if(portno < 1024 || destport < 0)
