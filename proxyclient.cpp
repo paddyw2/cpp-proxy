@@ -80,9 +80,6 @@ int proxyclient::send_message(char * orig_message, int length)
 {
     char * message = (char *)malloc(length);
     memcpy(message, orig_message, length);
-
-    cout << replace_str_old << endl;
-    cout << replace_str_new << endl;
     int new_size = find_replace(&message, length);
     print_log(message, 1, new_size);
     write_to_client(message, new_size);
@@ -301,7 +298,7 @@ int proxyclient::find_replace(char ** message, int length)
 {
     // check if replace activated
     if(replace_flag == 0)
-        return 0;
+        return length;
     // check that replacement params provided
     if(replace_not_set == 1)
         error("Replace specified but strings not provided\n");

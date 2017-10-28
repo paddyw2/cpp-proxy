@@ -303,7 +303,6 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
     // process logging
     if(logging_set == 1) {
         cout << "Logging provided!" << endl;
-        replace_option = 0;
         if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0) {
             cout << "Raw chosen!" << endl;
             logging_option = 1;
