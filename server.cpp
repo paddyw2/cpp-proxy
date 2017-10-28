@@ -292,29 +292,20 @@ proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
 
 int server::process_replace_logging(int replace_set, int logging_set, char * arguments[])
 {
-    // process replace
-    if(replace_set == 1) {
-        memcpy(replace_str_old, arguments[3+logging_set], sizeof(replace_str_old));
-        memcpy(replace_str_new, arguments[4+logging_set], sizeof(replace_str_new));
-        replace_option = 1;
-    } else {
-        cout << "No replace options provided" << endl;
-        replace_option = 0;
-    }
     // process logging
     if(logging_set == 1) {
-        cout << "Logging provided!" << endl;
+        cout << "Logging activated: ";
         if(strncmp(arguments[1], "-raw", sizeof("-raw")) == 0) {
-            cout << "Raw chosen!" << endl;
+            cout << "-raw" << endl;
             logging_option = 1;
         } else if(strncmp(arguments[1], "-strip", sizeof("-strip")) == 0) {
-            cout << "Strip chosen!" << endl;
+            cout << "-strip" << endl;
             logging_option = 2;
         } else if(strncmp(arguments[1], "-hex", sizeof("-hex")) == 0) {
-            cout << "Hex chosen!" << endl;
+            cout << "-hex" << endl;
             logging_option = 3;
         } else if(strncmp(arguments[1], "-auto", 5) == 0) {
-            cout << "AutoN chosen!" << endl;
+            cout << "-autoN" << endl;
             int end = strlen(arguments[1])-1;
             char val = arguments[1][end];
             unsigned int number = 0;
@@ -335,14 +326,25 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
             }
             logging_option = (int)number;
         } else {
-            error("Invalid logging option: must be -raw, -strip, or -auto[N]\n");
+            error("\nInvalid logging option: must be -raw, -strip, or -auto[N]\n");
         }
     } else {
         // neither logging or replace set
-        cout << "No logging options set - logging off by default" << endl;
+        cout << "Logging not activated" << endl;
         logging_option = 0;
     }
-    //print_logging_status(logging_option);
+
+    // process replace
+    if(replace_set == 1) {
+        memcpy(replace_str_old, arguments[3+logging_set], sizeof(replace_str_old));
+        memcpy(replace_str_new, arguments[4+logging_set], sizeof(replace_str_new));
+        replace_option = 1;
+        cout << "Replace activated: " << replace_str_old << " --> " << replace_str_new << endl;
+    } else {
+        cout << "Replace not activated" << endl;
+        replace_option = 0;
+    }
+
     return 0;
 }
 

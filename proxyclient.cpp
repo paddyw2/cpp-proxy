@@ -190,9 +190,14 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
         strncpy(direction, "---->", sizeof("---->"));
 
     if(log_flag == 1) {
-        // raw option, just
+        // raw option, just print normally
+        // until getting a \n then add padding
         printf("%s ", direction);
         for(int i=0;i<size;i++) {
+            if(message[i] == '\n') {
+                printf("\n      ");
+                continue;
+            }
             printf("%c", message[i]);
         }
         printf("\n");
@@ -311,7 +316,6 @@ int proxyclient::find_replace(char ** message, int length)
     int inserted_size = 0;
 
     int length_diff = strlen(replace_str_new) - strlen(replace_str_old);
-    cout << "len: " << length_diff << endl;
     int master_found = 0;
 
     for(int i=0; i<length; i++) {
@@ -334,7 +338,6 @@ int proxyclient::find_replace(char ** message, int length)
                 new_message = (char *)realloc(new_message, max_size*2);
                 // increment size of allocation
                 max_size = max_size*2;
-                cout << "Realloc" << endl;
             }
             // bump everything after original up by difference
             char * tmp = (char *)calloc(current_size, sizeof(char));
@@ -353,12 +356,9 @@ int proxyclient::find_replace(char ** message, int length)
     }
 
     if(master_found == 1) {
-        cout << "At least one occurance found" << endl;
         // update message with new pointer after realloc
         *message = (char *)realloc(*message, current_size);
         memcpy(*message, new_message, current_size);
-        cout << "Message" << endl;
-        cout << *message << endl;
     }
 
     return current_size;
