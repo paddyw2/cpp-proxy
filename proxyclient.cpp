@@ -275,6 +275,32 @@ int proxyclient::log_auton(char * direction, char * message, int size)
 
 int proxyclient::find_replace(char * message, int length)
 {
+    char replace_str_old[] = "FA";
+    char replace_str_new[] = "HTTP";
+    int master_found = 0;
+    for(int i=0; i<length; i++) {
+        int found = 1;
+        for(int j=0; j<strlen(replace_str_old); j++) {
+            if(message[i+j] == replace_str_old[j]) {
+                continue;
+            } else {
+                found = 0;
+                break;
+            }
+        }
+        // if a match is found at i
+        if(found == 1) {
+            // replace with new string
+            master_found = 1;
+        } else {
+            // string not found at this
+            // index
+        }
+    }
+
+    if(master_found == 1)
+        cout << "At least one occurance found" << endl;
+
     return 0;
 }
 
