@@ -26,7 +26,6 @@ class server
         int strip_newline(char * input, int max);
         void error(const char * msg);
         int stop_server();
-        int replace_tamper(char * message);
         proxyclient get_proxy(int socket_id, vector<proxyclient> proxy_list);
         int remove_client(int client_socket, fd_set sockets, vector<proxyclient> & proxies);
         int check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_set);
@@ -45,6 +44,4 @@ class server
         int replace_option;
         char replace_str_old[128];
         char replace_str_new[128];
-
-
 };

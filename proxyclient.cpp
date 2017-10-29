@@ -1,10 +1,18 @@
 #include "proxyclient.h"
 
+/*
+ * Indicate that parameters are required
+ * for constructor
+ */
 proxyclient::proxyclient()
 {
     error("Must provide port, url and id parameters\n");
 }
 
+/*
+ * Constructor
+ * Sets up basic proxy connection
+ */
 proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in cli_addr)
 {
     // set default options
@@ -42,6 +50,12 @@ proxyclient::proxyclient(int port, char * url, int sock_id, struct sockaddr_in c
         error("Proxy remote connection error\n");
 }
 
+/*
+ * Sets the replace and log flags that
+ * determine which type of logging and
+ * whether or not a replace has been
+ * specified
+ */
 int proxyclient::set_log_replace(int logging_option, int replace_option)
 {
     // set logging and replace options
@@ -50,6 +64,10 @@ int proxyclient::set_log_replace(int logging_option, int replace_option)
     return 0;
 }
 
+/*
+ * Sets the string to be replaced, and
+ * the string to replace it with
+ */
 int proxyclient::set_replace_strings(char * replace_old, char * replace_new)
 {
     // copy replace strings
@@ -59,6 +77,10 @@ int proxyclient::set_replace_strings(char * replace_old, char * replace_new)
     return 0;
 }
 
+/*
+ * Prints client connection information
+ * to stdout
+ */
 int proxyclient::print_connection_info()
 {
     cout << "New connection: ";
@@ -75,6 +97,11 @@ int proxyclient::print_connection_info()
     return 0;
 }
 
+/*
+ * Sends a message to the remote host, with a
+ * find replace step in between if the appropriate
+ * flag is set
+ */
 int proxyclient::send_message(char * orig_message, int length)
 {
     char * message = (char *)malloc(length);
@@ -85,6 +112,11 @@ int proxyclient::send_message(char * orig_message, int length)
     return check_response_ready();
 }
 
+/*
+ * Receives a message from the remote most, with a
+ * find replace step in between if the appropriate
+ * flag is set
+ */
 int proxyclient::receive_message(char ** message, int length)
 {
     bzero(*message, length);
@@ -136,6 +168,10 @@ int proxyclient::convert_hostname_ip(char * target_ip, int target_size, char * d
     return 0;
 }
 
+/*
+ * Takes the client IP address and converts it
+ * to a domain name
+ */
 int proxyclient::resolve_origin_hostname(struct sockaddr_in cli_addr)
 {
     // get origin IP address
@@ -182,6 +218,10 @@ int proxyclient::read_from_client(char * message, int length)
     return error_flag;
 }
 
+/*
+ * Prints the orig_message data in the format
+ * specificed by the log flag
+ */
 int proxyclient::print_log(char * orig_message, int direct, int size)
 {
     char message[size];
@@ -217,6 +257,10 @@ int proxyclient::print_log(char * orig_message, int direct, int size)
     return 0;
 }
 
+/*
+ * Prints the message data in either strip or
+ * hex format, depending on the log flag
+ */
 int proxyclient::log_strip_hex(char * direction, char * message, int size)
 {
     // save original for hex
@@ -274,6 +318,9 @@ int proxyclient::log_strip_hex(char * direction, char * message, int size)
     return 0;
 }
 
+/* 
+ * Prints the message data in autoN format
+ */
 int proxyclient::log_auton(char * direction, char * message, int size)
 {
     cout << direction << " ";
@@ -298,13 +345,18 @@ int proxyclient::log_auton(char * direction, char * message, int size)
         } else {
             printf("/%02X", (unsigned char)next_char);
         }
-
         counter++;
     }
     printf("\n");
     return 0;
 }
 
+/*
+ * Alters the message pointer to change all instances
+ * of replace_str_old with replace_str_new
+ * Accounts for cases where replace_str_new and
+ * replace_str_new are not the same length
+ */
 int proxyclient::find_replace(char ** message, int length)
 {
     // check if replace activated
@@ -361,15 +413,20 @@ int proxyclient::find_replace(char ** message, int length)
         }
     }
 
+    // only copy result if a change occurred
     if(master_found == 1) {
         // update message with new pointer after realloc
         *message = (char *)realloc(*message, current_size);
         memcpy(*message, new_message, current_size);
     }
-
+    // indicate any size change
     return current_size;
 }
 
+/*
+ * Checks if remote host is ready to
+ * respond with data
+ */
 int proxyclient::check_response_ready()
 {
     struct timeval timeout;
@@ -410,6 +467,11 @@ int proxyclient::get_socket_origin_id()
     return socket_origin_id;
 }
 
+/*
+ * Destory the proxy socket
+ * connection to the remote
+ * host
+ */
 int proxyclient::destroy()
 {
     close(proxy_socket);

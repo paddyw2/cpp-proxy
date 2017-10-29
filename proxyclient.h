@@ -53,6 +53,4 @@ class proxyclient
         char replace_str_old[128];
         char replace_str_new[128];
         int replace_not_set;
-
-
 };
