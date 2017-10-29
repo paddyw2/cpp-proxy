@@ -1,5 +1,10 @@
 #include "server.h"
 
+/*
+ * Constructor
+ * Sets up initial server options and
+ * parsing command line arguments
+ */
 server::server(int argc, char * argv[])
 {
     // check command line arguments
@@ -41,6 +46,7 @@ server::server(int argc, char * argv[])
         // stay with defaults
     }
 
+    // extract values from command line arguments
     process_replace_logging(replace_set, logging_set, argv);
 
     // convert argument to port number
@@ -52,7 +58,11 @@ server::server(int argc, char * argv[])
         error("Invalid port number\n"
               "Usage: ./proxy [logOptions] [replaceOptions] srcPort server dstPort\n");
     }
+
+    // get destination server url
     serverurl = argv[2+arg_offset];
+
+    // check for restricted port number
     if(portno < 1024 || destport < 0)
        error("ERROR reserved port number");
 
@@ -73,9 +83,8 @@ server::server(int argc, char * argv[])
 }
 
 /*
- * 
  * Runs infinitely, waiting for and handling client
- * connections one at a time
+ * multiplie client connections
  */
 int server::start_server()
 {
@@ -170,6 +179,12 @@ int server::start_server()
     return 0;
 }
 
+/*
+ * Checks if any of connected client connections have
+ * responses ready to be received by their proxy
+ * If a response exists, send it to client
+ * Also checks for disconnected remote hosts
+ */
 int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_set)
 {
     vector<proxyclient>::iterator itr;
@@ -202,7 +217,9 @@ int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_
     return -1;
 }
 
-
+/*
+ * Kill a client socket and its proxy
+ */
 int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient> & proxies)
 {
     close(client_socket);
@@ -224,8 +241,6 @@ int server::remove_client(int client_socket, fd_set sockets, vector<proxyclient>
     error("Proxy not found\n");
     return 0;
 }
-
-
 
 /*
  * Writes to client socket and checks
@@ -271,11 +286,9 @@ int server::strip_newline(char * input, int max)
     return 0;
 }
 
-int server::replace_tamper(char * message)
-{
-    return 0;
-}
-
+/*
+ * Given a client socket id, return its proxy instance
+ */
 proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
 {
     vector<proxyclient>::iterator itr;
@@ -291,6 +304,10 @@ proxyclient server::get_proxy(int socket_id, vector<proxyclient> proxy_list)
     return null_proxy;
 }
 
+/*
+ * Extract logging and replace options from command
+ * line arguments
+ */
 int server::process_replace_logging(int replace_set, int logging_set, char * arguments[])
 {
     // process logging
@@ -335,7 +352,7 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
         logging_option = 0;
     }
 
-    // process replace
+    // process replace options
     if(replace_set == 1) {
         memcpy(replace_str_old, arguments[3+logging_set], sizeof(replace_str_old));
         memcpy(replace_str_new, arguments[4+logging_set], sizeof(replace_str_new));
@@ -345,7 +362,6 @@ int server::process_replace_logging(int replace_set, int logging_set, char * arg
         cout << "Replace not activated" << endl;
         replace_option = 0;
     }
-
     return 0;
 }
 

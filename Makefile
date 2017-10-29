@@ -1,2 +1,2 @@
 make:
-	g++ -o main *.cpp
+	g++ -o proxy *.cpp

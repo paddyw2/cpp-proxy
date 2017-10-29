@@ -230,7 +230,10 @@ int proxyclient::log_strip_hex(char * direction, char * message, int size)
     if(log_flag == 2) {
         // strip option, so just print
         // stripped string
-        cout << direction << message << endl;
+        for(int i=0;i<size;i++) {
+            printf("%c", message[i]);
+        }
+        printf("\n");
     } else {
         // hex option
         // print chars in line, then hex chars x16
