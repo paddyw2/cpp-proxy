@@ -104,11 +104,13 @@ int proxyclient::print_connection_info()
  */
 int proxyclient::send_message(char * orig_message, int length)
 {
+    cout << "L2: " << length << endl;
     char * message = (char *)malloc(length);
     memcpy(message, orig_message, length);
     int new_size = find_replace(&message, length);
     print_log(message, 1, new_size);
     write_to_client(message, new_size);
+    free(message);
     return check_response_ready();
 }
 
@@ -121,11 +123,9 @@ int proxyclient::receive_message(char ** message, int length)
 {
     bzero(*message, length);
     int response_size = read_from_client(*message, length);
-    char * new_message = (char *)malloc(response_size);
-    memcpy(new_message, *message, response_size);
-    int new_size = find_replace(&new_message, response_size);
-    print_log(new_message, 0, new_size);
-    *message = new_message;
+    cout << "L3: " << length << endl;
+    int new_size = find_replace(&(*message), response_size);
+    print_log(*message, 0, new_size);
     return new_size;
 }
 
@@ -367,6 +367,7 @@ int proxyclient::find_replace(char ** message, int length)
         error("Replace specified but strings not provided\n");
 
     // if activate, proceed with replace
+    cout << "Length: " << length << endl;
     char * new_message = (char *)malloc(length);
     memcpy(new_message, *message, length);
     int current_size = length;
@@ -414,10 +415,11 @@ int proxyclient::find_replace(char ** message, int length)
     }
 
     // only copy result if a change occurred
-    if(master_found == 1) {
+    if(master_found == 1 || 1==1) {
         // update message with new pointer after realloc
         *message = (char *)realloc(*message, current_size);
         memcpy(*message, new_message, current_size);
+        free(new_message);
     }
     // indicate any size change
     return current_size;

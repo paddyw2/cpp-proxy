@@ -212,6 +212,7 @@ int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_
                 write_to_client(response, length, i);
             }
         }
+        free(response);
         itr++;
     }
     return -1;
