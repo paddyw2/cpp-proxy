@@ -4,7 +4,7 @@ A basic network proxy with logging and packet altering options
 To run:
 
 1. <code>make</code>
-2. <code>./proxy [logging options] port [replace options] host host-port
+2. <code>./proxy [logging options] port [replace options] host host-port</code>
 
 Example:
 
