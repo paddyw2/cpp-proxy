@@ -104,7 +104,6 @@ int proxyclient::print_connection_info()
  */
 int proxyclient::send_message(char * orig_message, int length)
 {
-    cout << "L2: " << length << endl;
     char * message = (char *)malloc(length);
     memcpy(message, orig_message, length);
     int new_size = find_replace(&message, length);
@@ -123,7 +122,6 @@ int proxyclient::receive_message(char ** message, int length)
 {
     bzero(*message, length);
     int response_size = read_from_client(*message, length);
-    cout << "L3: " << length << endl;
     int new_size = find_replace(&(*message), response_size);
     print_log(*message, 0, new_size);
     return new_size;
@@ -367,7 +365,6 @@ int proxyclient::find_replace(char ** message, int length)
         error("Replace specified but strings not provided\n");
 
     // if activate, proceed with replace
-    cout << "Length: " << length << endl;
     char * new_message = (char *)malloc(length);
     memcpy(new_message, *message, length);
     int current_size = length;
