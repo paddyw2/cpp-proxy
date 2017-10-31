@@ -199,10 +199,10 @@ int server::check_proxy_responses(vector<proxyclient> proxies, fd_set active_fd_
         // send
         int response_base = 2048;
         char * response = (char *)malloc(response_base);;
-        int length = 1;
+        int length = response_base;
         while(proxy.check_response_ready() == 1) {
             bzero(response, 2048);
-            length = proxy.receive_message(&response, response_base);
+            length = proxy.receive_message(&response, length);
             if(length == 0) {
                 // remote server disconnected, so disconnect
                 // client

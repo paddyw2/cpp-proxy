@@ -122,8 +122,11 @@ int proxyclient::receive_message(char ** message, int length)
 {
     bzero(*message, length);
     int response_size = read_from_client(*message, length);
-    int new_size = find_replace(&(*message), response_size);
-    print_log(*message, 0, new_size);
+    char * new_message = (char *)malloc(response_size);
+    memcpy(new_message, *message, response_size);
+    int new_size = find_replace(&new_message, response_size);
+    print_log(new_message, 0, new_size);
+    *message = new_message;
     return new_size;
 }
 
